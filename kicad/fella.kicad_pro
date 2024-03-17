@@ -662,6 +662,10 @@
     [
       "ce09a172-9aa3-4d99-a46d-3e0c9dd43a00",
       "usb"
+    ],
+    [
+      "51f1375c-7d5b-4ef6-9c62-05d307c98d71",
+      "expansion"
     ]
   ],
   "text_variables": {}

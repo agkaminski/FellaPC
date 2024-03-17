@@ -5540,6 +5540,16 @@
 		)
 		(uuid "ff9eff48-840e-4efe-8395-2949c49388e0")
 	)
+	(text "Can use plain 6502/65C02,\nW65C02 is here to handle\nits additional pins"
+		(exclude_from_sim no)
+		(at 98.044 167.132 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "6b92198f-8af5-40e1-b35c-99be7ca37885")
+	)
 	(label "D7"
 		(at 152.4 140.97 0)
 		(fields_autoplaced yes)
