@@ -654,6 +654,14 @@
     [
       "4fcf83d0-a396-4aeb-b2db-c20a053d3b3c",
       "keyboard"
+    ],
+    [
+      "65a55230-6701-4405-90c2-166a7f1a4203",
+      "io"
+    ],
+    [
+      "ce09a172-9aa3-4d99-a46d-3e0c9dd43a00",
+      "usb"
     ]
   ],
   "text_variables": {}

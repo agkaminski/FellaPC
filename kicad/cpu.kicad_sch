@@ -6177,7 +6177,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Package_DIP:DIP-14_W7.62mm"
 			(at 86.36 134.62 0)
 			(effects
 				(font
@@ -6323,7 +6323,7 @@
 	)
 	(symbol
 		(lib_id "74xx:74HC04")
-		(at 337.82 29.21 0)
+		(at 323.85 73.66 0)
 		(unit 6)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -6331,7 +6331,7 @@
 		(dnp no)
 		(uuid "110f9d3a-0e82-4b7a-8e55-5dff1a774040")
 		(property "Reference" "U6"
-			(at 338.074 37.338 0)
+			(at 324.104 81.788 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6339,15 +6339,15 @@
 			)
 		)
 		(property "Value" "74HC04"
-			(at 337.566 34.798 0)
+			(at 323.596 79.248 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Footprint" ""
-			(at 337.82 29.21 0)
+		(property "Footprint" "Package_DIP:DIP-14_W7.62mm"
+			(at 323.85 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6356,7 +6356,7 @@
 			)
 		)
 		(property "Datasheet" "https://assets.nexperia.com/documents/data-sheet/74HC_HCT04.pdf"
-			(at 337.82 29.21 0)
+			(at 323.85 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6365,7 +6365,7 @@
 			)
 		)
 		(property "Description" "Hex Inverter"
-			(at 337.82 29.21 0)
+			(at 323.85 73.66 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6449,7 +6449,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Package_DIP:DIP-14_W7.62mm"
 			(at 105.41 134.62 0)
 			(effects
 				(font
@@ -6553,7 +6553,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Package_DIP:DIP-14_W7.62mm"
 			(at 335.28 125.73 0)
 			(effects
 				(font
@@ -6789,7 +6789,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Package_DIP:DIP-14_W7.62mm"
 			(at 123.19 73.66 0)
 			(effects
 				(font
@@ -6893,7 +6893,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Package_DIP:DIP-14_W7.62mm"
 			(at 332.74 102.87 0)
 			(effects
 				(font
@@ -7063,7 +7063,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Package_DIP:DIP-14_W7.62mm"
 			(at 100.33 73.66 0)
 			(effects
 				(font
@@ -7167,7 +7167,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Package_DIP:DIP-14_W7.62mm"
 			(at 187.96 44.45 0)
 			(effects
 				(font
@@ -7517,7 +7517,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Jumper:SolderJumper-3_P1.3mm_Bridged12_Pad1.0x1.5mm"
 			(at 81.28 73.66 0)
 			(effects
 				(font
@@ -7656,7 +7656,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Package_DIP:DIP-14_W7.62mm"
 			(at 120.65 41.91 0)
 			(effects
 				(font
@@ -7759,7 +7759,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Package_DIP:DIP-14_W7.62mm"
 			(at 189.23 30.48 0)
 			(effects
 				(font
@@ -7997,7 +7997,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Package_DIP:DIP-16_W7.62mm"
 			(at 171.45 77.47 0)
 			(effects
 				(font
@@ -8107,7 +8107,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Package_DIP:DIP-14_W7.62mm"
 			(at 172.72 52.07 0)
 			(effects
 				(font
@@ -8463,7 +8463,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Package_DIP:DIP-14_W7.62mm"
 			(at 140.97 41.91 0)
 			(effects
 				(font

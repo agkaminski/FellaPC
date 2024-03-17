@@ -990,14 +990,15 @@
 				)
 			)
 		)
-		(symbol "Switch:SW_MEC_5E"
+		(symbol "Switch:SW_Omron_B3FS"
+			(pin_numbers hide)
 			(pin_names
 				(offset 1.016) hide)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
 			(property "Reference" "SW"
-				(at 0.635 5.715 0)
+				(at 1.27 2.54 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -1005,8 +1006,8 @@
 					(justify left)
 				)
 			)
-			(property "Value" "SW_MEC_5E"
-				(at 0 -3.175 0)
+			(property "Value" "SW_Omron_B3FS"
+				(at 0 -1.524 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -1014,7 +1015,7 @@
 				)
 			)
 			(property "Footprint" ""
-				(at 0 7.62 0)
+				(at 0 5.08 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -1022,8 +1023,8 @@
 					(hide yes)
 				)
 			)
-			(property "Datasheet" "http://www.apem.com/int/index.php?controller=attachment&id_attachment=1371"
-				(at 0 7.62 0)
+			(property "Datasheet" "https://omronfs.omron.com/en_US/ecb/products/pdf/en-b3fs.pdf"
+				(at 0 5.08 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -1031,7 +1032,7 @@
 					(hide yes)
 				)
 			)
-			(property "Description" "MEC 5E single pole normally-open tactile switch"
+			(property "Description" "Omron B3FS 6x6mm single pole normally-open tactile switch"
 				(at 0 0 0)
 				(effects
 					(font
@@ -1049,7 +1050,7 @@
 					(hide yes)
 				)
 			)
-			(property "ki_fp_filters" "SW*MEC*5G*"
+			(property "ki_fp_filters" "SW*Omron*B3FS*"
 				(at 0 0 0)
 				(effects
 					(font
@@ -1058,9 +1059,9 @@
 					(hide yes)
 				)
 			)
-			(symbol "SW_MEC_5E_0_1"
+			(symbol "SW_Omron_B3FS_0_1"
 				(circle
-					(center -1.778 2.54)
+					(center -2.032 0)
 					(radius 0.508)
 					(stroke
 						(width 0)
@@ -1072,7 +1073,7 @@
 				)
 				(polyline
 					(pts
-						(xy -2.286 3.81) (xy 2.286 3.81)
+						(xy 0 1.27) (xy 0 3.048)
 					)
 					(stroke
 						(width 0)
@@ -1084,31 +1085,7 @@
 				)
 				(polyline
 					(pts
-						(xy 0 3.81) (xy 0 5.588)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -2.54 0) (xy -2.54 2.54) (xy -2.286 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 2.54 0) (xy 2.54 2.54) (xy 2.286 2.54)
+						(xy 2.54 1.27) (xy -2.54 1.27)
 					)
 					(stroke
 						(width 0)
@@ -1119,7 +1096,7 @@
 					)
 				)
 				(circle
-					(center 1.778 2.54)
+					(center 2.032 0)
 					(radius 0.508)
 					(stroke
 						(width 0)
@@ -1130,7 +1107,7 @@
 					)
 				)
 				(pin passive line
-					(at -5.08 2.54 0)
+					(at -5.08 0 0)
 					(length 2.54)
 					(name "1"
 						(effects
@@ -1148,7 +1125,7 @@
 					)
 				)
 				(pin passive line
-					(at -5.08 0 0)
+					(at 5.08 0 180)
 					(length 2.54)
 					(name "2"
 						(effects
@@ -1158,42 +1135,6 @@
 						)
 					)
 					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 5.08 0 180)
-					(length 2.54)
-					(name "K"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 5.08 2.54 180)
-					(length 2.54)
-					(name "A"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "4"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1673,12 +1614,6 @@
 		(uuid "09958ca5-b3d5-48a0-86b3-dd70d2d1fc35")
 	)
 	(junction
-		(at 60.96 132.08)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "137dab35-0370-4a4b-9040-a4e3927b211d")
-	)
-	(junction
 		(at 99.06 113.03)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -1918,16 +1853,6 @@
 	)
 	(wire
 		(pts
-			(xy 60.96 132.08) (xy 62.23 132.08)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "48716d1a-e515-46d6-b8a8-051e9cfbc80c")
-	)
-	(wire
-		(pts
 			(xy 102.87 63.5) (xy 100.33 63.5)
 		)
 		(stroke
@@ -2135,16 +2060,6 @@
 			(type default)
 		)
 		(uuid "883ee8c4-6b8f-4bba-a6aa-19ce0b7b91ca")
-	)
-	(wire
-		(pts
-			(xy 60.96 129.54) (xy 60.96 132.08)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "89709e59-ec06-4e48-85a7-14d28f417142")
 	)
 	(wire
 		(pts
@@ -2418,7 +2333,7 @@
 	)
 	(wire
 		(pts
-			(xy 60.96 132.08) (xy 60.96 146.05)
+			(xy 60.96 129.54) (xy 60.96 146.05)
 		)
 		(stroke
 			(width 0)
@@ -2664,80 +2579,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Switch:SW_MEC_5E")
-		(at 67.31 132.08 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "1047085e-c661-45c6-9f8f-117a2464a12e")
-		(property "Reference" "SW1"
-			(at 67.31 121.92 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "SW_MEC_5E"
-			(at 67.31 124.46 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Button_Switch_THT:SW_PUSH_6mm_H4.3mm"
-			(at 67.31 124.46 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "http://www.apem.com/int/index.php?controller=attachment&id_attachment=1371"
-			(at 67.31 124.46 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "MEC 5E single pole normally-open tactile switch"
-			(at 67.31 132.08 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "4"
-			(uuid "cb74c023-d247-424a-9970-cc53a1721358")
-		)
-		(pin "1"
-			(uuid "3d6480ec-4e54-4d45-a7a3-da3473867913")
-		)
-		(pin "2"
-			(uuid "43cc2c82-5e0b-4e11-b459-7ac8bd7108cc")
-		)
-		(pin "3"
-			(uuid "6d29ad49-1fb3-4050-94ff-3a5e8d819a14")
-		)
-		(instances
-			(project "fella"
-				(path "/0e49b66d-39aa-4a48-b9a1-8037366b6d94/4b0daece-bd7e-414d-bdd3-87aa553d3255"
-					(reference "SW1")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:VCC")
 		(at 88.9 55.88 0)
 		(unit 1)
@@ -2897,7 +2738,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Package_DIP:DIP-14_W7.62mm"
+		(property "Footprint" "Package_DIP:DIP-16_W7.62mm"
 			(at 130.81 58.42 0)
 			(effects
 				(font
@@ -3079,7 +2920,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Package_TO_SOT_THT_AKL:TO-92_Inline_Wide_CBE"
+		(property "Footprint" "Package_TO_SOT_THT:TO-92"
 			(at 153.67 127 0)
 			(effects
 				(font
@@ -3681,6 +3522,74 @@
 			(project "fella"
 				(path "/0e49b66d-39aa-4a48-b9a1-8037366b6d94/4b0daece-bd7e-414d-bdd3-87aa553d3255"
 					(reference "#PWR04")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Switch:SW_Omron_B3FS")
+		(at 67.31 129.54 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "ffcecabd-2303-4a84-ba21-f8b16d0c625b")
+		(property "Reference" "SW2"
+			(at 67.31 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "SW_Omron_B3FS"
+			(at 67.31 124.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Button_Switch_THT:SW_TH_Tactile_Omron_B3F-10xx"
+			(at 67.31 124.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://omronfs.omron.com/en_US/ecb/products/pdf/en-b3fs.pdf"
+			(at 67.31 124.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Omron B3FS 6x6mm single pole normally-open tactile switch"
+			(at 67.31 129.54 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "3fe17010-888e-4d2a-8d04-ae03c26d1b05")
+		)
+		(pin "1"
+			(uuid "d382d315-1c78-48b3-8053-06d14a5a96bb")
+		)
+		(instances
+			(project "fella"
+				(path "/0e49b66d-39aa-4a48-b9a1-8037366b6d94/4b0daece-bd7e-414d-bdd3-87aa553d3255"
+					(reference "SW2")
 					(unit 1)
 				)
 			)

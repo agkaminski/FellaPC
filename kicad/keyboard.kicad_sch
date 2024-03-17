@@ -2022,7 +2022,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Package_DIP:DIP-20_W7.62mm"
 			(at 165.1 129.54 0)
 			(effects
 				(font
