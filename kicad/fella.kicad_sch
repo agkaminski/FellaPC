@@ -189,6 +189,16 @@
 	)
 	(wire
 		(pts
+			(xy 128.27 121.92) (xy 180.34 121.92)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "17cba3e7-3cfd-40ca-ac77-609cb87495ee")
+	)
+	(wire
+		(pts
 			(xy 26.67 128.27) (xy 26.67 46.99)
 		)
 		(stroke
@@ -576,6 +586,16 @@
 			(type default)
 		)
 		(uuid "60540caf-155f-468b-b905-e2b1fbbb1232")
+	)
+	(wire
+		(pts
+			(xy 128.27 119.38) (xy 180.34 119.38)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6649cabe-3812-4b29-8341-0fb2fa4bc80d")
 	)
 	(bus
 		(pts
@@ -1603,7 +1623,7 @@
 	)
 	(sheet
 		(at 180.34 100.33)
-		(size 17.78 19.05)
+		(size 17.78 24.13)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
@@ -1623,7 +1643,7 @@
 			)
 		)
 		(property "Sheetfile" "io.kicad_sch"
-			(at 180.34 119.9646 0)
+			(at 180.34 125.0446 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1741,6 +1761,26 @@
 			)
 			(uuid "868321c8-c70b-4860-b57b-f46c6d4c1d1c")
 		)
+		(pin "ROMSEL0" output
+			(at 180.34 119.38 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+			(uuid "63415d03-f1af-493e-a202-823feacf1c2b")
+		)
+		(pin "ROMSEL1" output
+			(at 180.34 121.92 180)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+			(uuid "fc191831-bced-4d97-840e-f79590cd9933")
+		)
 		(instances
 			(project "fella"
 				(path "/0e49b66d-39aa-4a48-b9a1-8037366b6d94"
@@ -1751,7 +1791,7 @@
 	)
 	(sheet
 		(at 110.49 100.33)
-		(size 17.78 22.86)
+		(size 17.78 24.13)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
@@ -1771,7 +1811,7 @@
 			)
 		)
 		(property "Sheetfile" "vga.kicad_sch"
-			(at 110.49 123.7746 0)
+			(at 110.49 125.0446 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1858,6 +1898,26 @@
 				(justify right)
 			)
 			(uuid "31eae8ba-0b7b-413b-ac57-876835d8df3f")
+		)
+		(pin "ROMSEL1" input
+			(at 128.27 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+			(uuid "7e2b14a7-f5f8-4923-b71b-c0f67d7aa596")
+		)
+		(pin "ROMSEL0" input
+			(at 128.27 119.38 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+			(uuid "086c1753-e647-4521-b673-376d1338dad9")
 		)
 		(instances
 			(project "fella"
