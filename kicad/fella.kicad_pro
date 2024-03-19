@@ -130,7 +130,7 @@
         "min_track_width": 0.127,
         "min_via_annular_width": 0.09999999999999999,
         "min_via_diameter": 0.39999999999999997,
-        "solder_mask_to_copper_clearance": 0.0,
+        "solder_mask_to_copper_clearance": 0.005,
         "use_height_for_length_calcs": true
       },
       "teardrop_options": [
@@ -526,7 +526,7 @@
       "plot": "",
       "pos_files": "",
       "specctra_dsn": "",
-      "step": "",
+      "step": "fella.step",
       "svg": "",
       "vrml": ""
     },
