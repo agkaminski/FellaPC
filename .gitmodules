@@ -1,0 +1,3 @@
+[submodule "keyboard2"]
+	path = keyboard2
+	url = https://github.com/agkaminski/keyboard2.git
