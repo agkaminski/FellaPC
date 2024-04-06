@@ -1,18 +1,19 @@
-GOAL = rom
+GOAL = firmware
 
 CPU = 6502
 TARGET = $(addsuffix .bin, ${GOAL})
 GHASH = "$(shell git describe --always --dirty)"
-OBJ = main.o interrupt.o keyboard.o
+OBJ = main.o dram.o interrupt.o vga.o keyboard.o
 
 .PHONY: clean
 .PRECIOUS: %.asm
 MAKEFLAGS += --no-builtin-rules
 
 all: ${TARGET}
+	@grep -A11 "Segment list:" ${GOAL}.map
 
 fellapc.lib:
-	@cd bsp && $(MAKE) all
+	@cd bsp && $(MAKE) all --no-print-directory
 
 ${TARGET}: ${OBJ} fellapc.lib
 	@ld65 -C bsp/fellapc.cfg -m ${GOAL}.map -o "$@" ${OBJ} bsp/fellapc.lib
@@ -28,4 +29,4 @@ ${TARGET}: ${OBJ} fellapc.lib
 
 clean:
 	@rm -f *.o *.asm *.map *.bin
-	@cd bsp && $(MAKE) clean
+	@cd bsp && $(MAKE) clean --no-print-directory

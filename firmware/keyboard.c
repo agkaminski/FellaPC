@@ -1,3 +1,9 @@
+/* FellaPC Firmaware
+ * Keyboard
+ * Copyright: Aleksander Kaminski, 2024
+ * See LICENSE.md
+ */
+
 #include <stdint.h>
 #include <stddef.h>
 
@@ -6,7 +12,7 @@
 
 #define K(main, alt) (((alt) << 8) | ((main) & 0xff))
 #define MAIN(key) ((key) & 0xff)
-#define ALT(key) (((key) >> 8) & 0xff) 
+#define ALT(key) (((key) >> 8) & 0xff)
 
 static uint8_t * const base = (void *)0x9000;
 
@@ -51,6 +57,20 @@ static const uint16_t map[5][16] = {
 	K(KEY_RIGHTCTRL, KEY_RIGHTCTRL), K(KEY_FN, KEY_FN), K(KEY_LEFT, KEY_LEFT),
 	K(KEY_DOWN, KEY_DOWN), K(KEY_RIGHT, KEY_RIGHT)
 } };
+
+static uint8_t getModifier(uint8_t key)
+{
+	switch (key) {
+		case KEY_LEFTSHIFT:  return KEY_MOD_LSHIFT;
+		case KEY_RIGHTSHIFT: return KEY_MOD_RSHIFT;
+		case KEY_LEFTCTRL:   return KEY_MOD_LCTRL;
+		case KEY_LEFTALT:    return KEY_MOD_LALT;
+		case KEY_RIGHTALT:   return KEY_MOD_RALT;
+		case KEY_RIGHTCTRL:  return KEY_MOD_RCTRL;
+		case KEY_LEFTMETA:   return KEY_MOD_LMETA;
+		default:             return 0;
+	}
+}
 
 static int keyPress(struct keys *keys, uint8_t key)
 {
@@ -97,20 +117,30 @@ int keyboard_scan(struct keys *keys)
 	for (i = 0; i < 16; ++i) {
 		uint8_t row = ~base[i];
 		uint8_t change = row ^ lastState[i];
-		
+
 		lastState[i] = row;
-		
+
 		if (change) {
 			uint8_t j;
 			for (j = 0; j < 5; ++j) {
 				if (change & (1 << j)) {
 					uint8_t key = isFn ? ALT(map[j][i]) : MAIN(map[j][i]);
-					int ret = (row & (1 << j)) ?
-						keyPress(keys, key) : keyRelease(keys, key);
+					uint8_t modifier = getModifier(key);
+					uint8_t state = !!(row & (1 << j));
+					if (modifier) {
+						if (state)
+							keys->mod |= modifier;
+						else
+							keys->mod &= ~modifier;
+					}
+					else {
+						int ret = (row & (1 << j)) ?
+							keyPress(keys, key) : keyRelease(keys, key);
 
-					if (ret < 0) {
-						/* Overflow */
-						return ret;
+						if (ret < 0) {
+							/* Overflow */
+							return ret;
+						}
 					}
 				}
 			}
