@@ -1,0 +1,5 @@
+.vscode
+*.o
+*.map
+*.bin
+*.asm
