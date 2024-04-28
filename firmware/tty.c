@@ -14,8 +14,8 @@ static uint8_t caps = 0;
 
 static char tty_key2ascii(uint8_t mod, uint8_t key)
 {
-	static const char lower[] = "abcdefghijklmnopqrstuvwxyz1234567890\0\0\0\t -=[]\\`;',./";
-	static const char upper[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()\0\0\0\t _+{}|~:\"<>?";
+	static const char lower[] = "abcdefghijklmnopqrstuvwxyz1234567890\0\0\0\t -=[]\\\0;'`,./";
+	static const char upper[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()\0\0\0\t _+{}|\0:\"~<>?";
 
 	char ret = '\0';
 	int shift = !!(mod & (KEY_MOD_LSHIFT | KEY_MOD_RSHIFT));
