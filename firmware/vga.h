@@ -9,13 +9,19 @@
 
 #include <stdint.h>
 
+void vga_newLine(void);
+
 void vga_vsync(void);
 
-void vga_write(uint8_t row, uint8_t col, uint8_t data);
-
-uint8_t vga_read(uint8_t row, uint8_t col);
-
 void vga_scroll(void);
+
+void vga_set(char c);
+
+char vga_get(void);
+
+uint8_t vga_getLine(char *line);
+
+void vga_putc(char c);
 
 void vga_puts(const char *str);
 

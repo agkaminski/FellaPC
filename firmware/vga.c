@@ -5,6 +5,7 @@
  */
 
 #include "vga.h"
+#include "tty.h"
 
 #define COLS 80
 #define ROWS 60
@@ -22,27 +23,12 @@ static struct {
 static struct {
 	uint8_t col;
 	uint8_t row;
-	uint8_t cursor_state;
 } vga_context;
 
 void vga_vsync(void)
 {
 	g_vsync = 0;
 	while (!g_vsync);
-}
-
-void vga_write(uint8_t row, uint8_t col, uint8_t data)
-{
-	vga->row = row;
-	vga->col = col;
-	vga->data = data;
-}
-
-uint8_t vga_read(uint8_t row, uint8_t col)
-{
-	vga->row = row;
-	vga->col = col;
-	return vga->data;
 }
 
 static uint8_t vga_putLine(const char *line, uint8_t start)
@@ -60,7 +46,7 @@ static uint8_t vga_putLine(const char *line, uint8_t start)
 	return pos;
 }
 
-static void vga_newLine(void)
+void vga_newLine(void)
 {
 	vga_context.col = 0;
 	if (vga_context.row >= ROWS - 1) {
@@ -79,11 +65,75 @@ static void vga_incCol(uint8_t count)
 	}
 }
 
+void vga_set(char c)
+{
+	vga_vsync();
+	vga->row = vga_context.row;
+	vga->col = vga_context.col;
+	vga->data = c;
+}
+
+char vga_get(void)
+{
+	vga_vsync();
+	vga->row = vga_context.row;
+	vga->col = vga_context.col;
+	return vga->data;
+}
+
+uint8_t vga_getLine(char *line)
+{
+	uint8_t i;
+
+	vga_vsync();
+	vga->row = vga_context.row;
+	for (i = 0; i < vga_context.col; ++i) {
+		vga->col = i;
+		line[i] = vga->data;
+	}
+	line[i] = '\0';
+	return i;
+}
+
+void vga_putc(char c)
+{
+	switch (c) {
+		case '\0':
+			return;
+
+		case '\n':
+			tty_resetCursor();
+			vga_newLine();
+			break;
+
+		case '\r':
+			tty_resetCursor();
+			vga_context.col = 0;
+			break;
+
+		case '\t':
+			tty_resetCursor();
+			vga_incCol(4 - (vga_context.col & 0x3));
+			break;
+
+		default:
+			tty_resetCursor();
+			vga_vsync();
+			vga->row = vga_context.row;
+			vga->col = vga_context.col;
+			vga->data = c;
+			vga_incCol(1);
+			break;
+	}
+}
+
 void vga_puts(const char *str)
 {
 	char buff[COLS + 1];
 	uint8_t cols = 0, pos = 0;
 	uint8_t end = 0;
+
+	tty_resetCursor();
 
 	while (!end) {
 		while ((cols < COLS - vga_context.col) && !end) {
@@ -149,8 +199,23 @@ void vga_setCursor(uint8_t col, uint8_t row)
 
 void vga_moveCursor(int8_t col, int8_t row)
 {
-	vga_context.col += col;
-	vga_context.row += row;
-}
+	int8_t tcol = vga_context.col + col;
+	int8_t trow = vga_context.row + row;
 
+	if (tcol < 0) {
+		tcol = 0;
+	}
+	else if (tcol >= COLS) {
+		tcol = COLS -1;
+	}
+
+	if (trow < 0) {
+		trow = 0;
+	}
+	else if (trow >= ROWS) {
+		trow = ROWS - 1;
+	}
+
+	vga_context.col = tcol;
+	vga_context.row = trow;
 }

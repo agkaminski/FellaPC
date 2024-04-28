@@ -162,4 +162,3 @@ int keyboard_scan(struct keys *keys)
 
 	return 0;
 }
-
