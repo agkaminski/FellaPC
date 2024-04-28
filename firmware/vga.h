@@ -15,4 +15,10 @@ void vga_write(uint8_t row, uint8_t col, uint8_t data);
 
 uint8_t vga_read(uint8_t row, uint8_t col);
 
+void vga_scroll(void);
+
+void vga_puts(const char *str);
+
+void vga_clear(void);
+
 #endif

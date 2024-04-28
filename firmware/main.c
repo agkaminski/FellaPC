@@ -10,19 +10,16 @@
 
 int main(void)
 {
-	int row, col, wait;
-	uint8_t offset = 0;
+	char buff[32];
+	uint8_t counter = 0;
+	long wait;
+
+	vga_clear();
 
 	while (1) {
-		for (row = 0; row < 60; ++row) {
-			for (col = 0; col < 80; ++col) {
-				vga_write(row, col, ' ' + col + row + offset);
-			}
-		}
-
-		offset++;
-
-		for (wait = 0; wait < 32000; ++wait);
+		sprintf(buff, "This is the line number %d.\n", counter++);
+		vga_puts(buff);
+		for (wait = 0; wait < 1000; ++wait);
 	}
 
 	return 0;
