@@ -25,10 +25,25 @@ static struct {
 	uint8_t row;
 } vga_context;
 
+static struct {
+	uint8_t counter;
+	char prev;
+	uint8_t state;
+} cursor;
+
 void vga_vsync(void)
 {
 	g_vsync = 0;
 	while (!g_vsync);
+}
+
+void vga_resetCursor(void)
+{
+	cursor.counter = 0;
+	if (cursor.state) {
+		vga_set(cursor.prev);
+	}
+	cursor.state = 0;
 }
 
 static uint8_t vga_putLine(const char *line, uint8_t start)
@@ -48,6 +63,7 @@ static uint8_t vga_putLine(const char *line, uint8_t start)
 
 void vga_newLine(void)
 {
+	vga_resetCursor();
 	vga_context.col = 0;
 	if (vga_context.row >= ROWS - 1) {
 		vga_scroll();
@@ -71,19 +87,27 @@ void vga_set(char c)
 	vga->row = vga_context.row;
 	vga->col = vga_context.col;
 	vga->data = c;
+	cursor.prev = c;
 }
 
 char vga_get(void)
 {
-	vga_vsync();
-	vga->row = vga_context.row;
-	vga->col = vga_context.col;
-	return vga->data;
+	if (cursor.state) {
+		return cursor.prev;
+	}
+	else {
+		vga_vsync();
+		vga->row = vga_context.row;
+		vga->col = vga_context.col;
+		return vga->data;
+	}
 }
 
 uint8_t vga_getLine(char *line)
 {
 	uint8_t i;
+
+	vga_resetCursor();
 
 	vga_vsync();
 	vga->row = vga_context.row;
@@ -97,27 +121,25 @@ uint8_t vga_getLine(char *line)
 
 void vga_putc(char c)
 {
+	vga_resetCursor();
+
 	switch (c) {
 		case '\0':
 			return;
 
 		case '\n':
-			tty_resetCursor();
 			vga_newLine();
 			break;
 
 		case '\r':
-			tty_resetCursor();
 			vga_context.col = 0;
 			break;
 
 		case '\t':
-			tty_resetCursor();
 			vga_incCol(4 - (vga_context.col & 0x3));
 			break;
 
 		default:
-			tty_resetCursor();
 			vga_vsync();
 			vga->row = vga_context.row;
 			vga->col = vga_context.col;
@@ -133,7 +155,7 @@ void vga_puts(const char *str)
 	uint8_t cols = 0, pos = 0;
 	uint8_t end = 0;
 
-	tty_resetCursor();
+	vga_resetCursor();
 
 	while (!end) {
 		while ((cols < COLS - vga_context.col) && !end) {
@@ -186,6 +208,7 @@ void vga_puts(const char *str)
 
 void vga_clear(void)
 {
+	vga_resetCursor();
 	vga_context.col = 0;
 	vga_context.row = 0;
 	vga_clr();
@@ -193,6 +216,7 @@ void vga_clear(void)
 
 void vga_setCursor(uint8_t col, uint8_t row)
 {
+	vga_resetCursor();
 	vga_context.col = col;
 	vga_context.row = row;
 }
@@ -216,6 +240,25 @@ void vga_moveCursor(int8_t col, int8_t row)
 		trow = ROWS - 1;
 	}
 
+	vga_resetCursor();
+
 	vga_context.col = tcol;
 	vga_context.row = trow;
+}
+
+void vga_handleCursor(void)
+{
+	++cursor.counter;
+	if (cursor.counter == 32) {
+		cursor.state = 0;
+		cursor.prev = vga_get();
+		vga_vsync();
+		vga->row = vga_context.row;
+		vga->col = vga_context.col;
+		vga->data = '_';
+		cursor.state = 1;
+	}
+	else if (cursor.counter == 64) {
+		vga_resetCursor();
+	}
 }

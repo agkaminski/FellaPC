@@ -12,12 +12,6 @@
 
 static uint8_t caps = 0;
 
-static struct {
-	uint8_t counter;
-	char prev;
-	uint8_t state;
-} cursor;
-
 static char tty_key2ascii(uint8_t mod, uint8_t key)
 {
 	static const char lower[] = "abcdefghijklmnopqrstuvwxyz1234567890\0\0\0\t -=[]\\`;',./";
@@ -33,14 +27,6 @@ static char tty_key2ascii(uint8_t mod, uint8_t key)
 	return ret;
 }
 
-void tty_resetCursor(void)
-{
-	cursor.counter = 0;
-	if (cursor.state) {
-		vga_set(cursor.prev);
-	}
-	cursor.state = 0;
-}
 
 static int tty_handleSpecial(uint8_t mod, uint8_t key)
 {
@@ -48,48 +34,39 @@ static int tty_handleSpecial(uint8_t mod, uint8_t key)
 
 	switch (key) {
 		case KEY_CAPSLOCK:
-			tty_resetCursor();
 			caps = !caps;
 			break;
 
 		case KEY_HOME:
-			tty_resetCursor();
 			vga_moveCursor(-80, 0);
 			break;
 
 		case KEY_DELETE:
-			tty_resetCursor();
 			vga_moveCursor(-1, 0);
 			vga_putc(' ');
 			break;
 
 		case KEY_END:
-			tty_resetCursor();
 			vga_moveCursor(80, 0);
 			break;
 
 		case KEY_RIGHT:
-			tty_resetCursor();
 			vga_moveCursor(1, 0);
 			break;
 
 		case KEY_LEFT:
-			tty_resetCursor();
 			vga_moveCursor(-1, 0);
 			break;
 
 		case KEY_DOWN:
-			tty_resetCursor();
 			vga_moveCursor(0, 1);
 			break;
 
 		case KEY_UP:
-			tty_resetCursor();
 			vga_moveCursor(0, -1);
 			break;
 
 		case KEY_BACKSPACE:
-			tty_resetCursor();
 			vga_set(' ');
 			vga_moveCursor(-1, 0);
 			vga_set(' ');
@@ -118,7 +95,6 @@ int tty_update(char *cmd)
 		last_key = key;
 
 		if (key == KEY_ENTER) {
-			tty_resetCursor();
 			ret = vga_getLine(cmd);
 			vga_newLine();
 			return ret;
@@ -130,22 +106,13 @@ int tty_update(char *cmd)
 		else {
 			char c = tty_key2ascii(keys.mod, key);
 			if (c != '\0') {
-				cursor.counter = 0;
 				vga_putc(c);
 				return 0;
 			}
 		}
 	}
 
-	++cursor.counter;
-	if (cursor.counter == 32) {
-		cursor.prev = vga_get();
-		vga_set('_');
-		cursor.state = 1;
-	}
-	else if (cursor.counter == 64) {
-		tty_resetCursor();
-	}
+	vga_handleCursor();
 
 	return 0;
 }

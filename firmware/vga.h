@@ -33,4 +33,8 @@ void vga_moveCursor(int8_t col, int8_t row);
 
 void vga_tabCursor(void);
 
+void vga_resetCursor(void);
+
+void vga_handleCursor(void);
+
 #endif
