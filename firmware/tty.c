@@ -42,7 +42,6 @@ static int tty_handleSpecial(uint8_t mod, uint8_t key)
 			break;
 
 		case KEY_DELETE:
-			vga_moveCursor(-1, 0);
 			vga_putc(' ');
 			break;
 
