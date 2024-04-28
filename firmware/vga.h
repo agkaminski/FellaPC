@@ -21,4 +21,10 @@ void vga_puts(const char *str);
 
 void vga_clear(void);
 
+void vga_setCursor(uint8_t col, uint8_t row);
+
+void vga_moveCursor(int8_t col, int8_t row);
+
+void vga_tabCursor(void);
+
 #endif

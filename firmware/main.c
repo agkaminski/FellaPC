@@ -18,6 +18,16 @@ int main(void)
 
 	vga_clear();
 
+	vga_puts("0 tab\n");
+	vga_puts("\t1 tab\n");
+	vga_puts("\t\t2 tab\n");
+	vga_puts("\t\t\t3 tab\n");
+	vga_puts("\t\t\t\t4 tab\n");
+	vga_puts("\t\t\t\t\t5 tab\n");
+	vga_puts("\t\t\t\t\t\t6 tab\n");
+	vga_puts("\t\t\t\t\t\t\t7 tab\n");
+	vga_puts("\t\t\t\t\t\t\t\t8 tab\n");
+
 	while (1) {
 		ret = keyboard_scan(&keys);
 		sprintf(buff, "Keys: 0x%02x %.3hhu %.3hhu %.3hhu %.3hhu %.3hhu %.3hhu (%d)\n",

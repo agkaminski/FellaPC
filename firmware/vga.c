@@ -60,71 +60,76 @@ static uint8_t vga_putLine(const char *line, uint8_t start)
 	return pos;
 }
 
+static void vga_newLine(void)
+{
+	vga_context.col = 0;
+	if (vga_context.row >= ROWS - 1) {
+		vga_scroll();
+	}
+	else {
+		++vga_context.row;
+	}
+}
+
 static void vga_incCol(uint8_t count)
 {
 	vga_context.col += count;
 	if (vga_context.col >= COLS) {
-		vga_context.col = 0;
-		if (vga_context.row >= ROWS - 1) {
-			vga_scroll();
-		}
-		else {
-			++vga_context.row;
-		}
+		vga_newLine();
 	}
 }
 
 void vga_puts(const char *str)
 {
 	char buff[COLS + 1];
-	uint8_t i, pos = 0;
+	uint8_t cols = 0, pos = 0;
 	uint8_t end = 0;
 
-	while (1) {
-		for (i = 0; i < COLS - vga_context.col; ++i, ++pos) {
+	while (!end) {
+		while ((cols < COLS - vga_context.col) && !end) {
 			switch (str[pos]) {
 				case '\0':
 					end = 1;
-					--i;
 					break;
 
 				case '\n':
-					buff[i] = '\0';
-					vga_putLine(buff, vga_context.col);
-					vga_context.col = 0;
-					if (vga_context.row >= ROWS - 1) {
-						vga_scroll();
+					if (cols != 0) {
+						buff[cols] = '\0';
+						vga_putLine(buff, vga_context.col);
+						cols = 0;
 					}
-					else {
-						++vga_context.row;
-					}
-					i = 0;
+					vga_newLine();
 					break;
 
 				case '\r':
-					buff[i] = '\0';
-					vga_putLine(buff, vga_context.col);
+					if (cols != 0) {
+						buff[cols] = '\0';
+						vga_putLine(buff, vga_context.col);
+						cols = 0;
+					}
 					vga_context.col = 0;
-					i = 0;
+					break;
+
+				case '\t':
+					if (cols != 0) {
+						buff[cols] = '\0';
+						vga_incCol(vga_putLine(buff, vga_context.col));
+						cols = 0;
+					}
+					vga_incCol(4 - (vga_context.col & 0x3));
 					break;
 
 				default:
-					buff[i] = str[pos];
+					buff[cols++] = str[pos];
 					break;
 			}
 
-			if (end) {
-				break;
-			}
+			++pos;
 		}
 
-		if (i != 0) {
-			buff[i + 1] = '\0';
+		if (cols != 0) {
+			buff[cols] = '\0';
 			vga_incCol(vga_putLine(buff, vga_context.col));
-		}
-
-		if (end) {
-			return;
 		}
 	}
 }
@@ -134,4 +139,18 @@ void vga_clear(void)
 	vga_context.col = 0;
 	vga_context.row = 0;
 	vga_clr();
+}
+
+void vga_setCursor(uint8_t col, uint8_t row)
+{
+	vga_context.col = col;
+	vga_context.row = row;
+}
+
+void vga_moveCursor(int8_t col, int8_t row)
+{
+	vga_context.col += col;
+	vga_context.row += row;
+}
+
 }
