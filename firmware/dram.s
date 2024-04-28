@@ -8,14 +8,10 @@
 
 .proc			_dram_refresh: near
 
-.segment		"ZEROPAGE"
-
-@counter:		.res 1, $00
-
 .segment		"CODE"
 
 				LDY 0
-@loop:			LDA (@counter), Y
+@loop:			LDA $00, Y
 				INY
 				BNE @loop
 				RTS
