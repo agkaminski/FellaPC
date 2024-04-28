@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <string.h>
 
 #include "keys.h"
 #include "keyboard.h"
@@ -148,7 +149,9 @@ int keyboard_scan(struct keys *keys)
 						}
 
 						if (ret < 0) {
-							/* Overflow */
+							/* Overflow - reset everything to allow reliable recovery */
+							memset(keys, 0, sizeof(*keys));
+							memset(lastState, 0, sizeof(lastState));
 							return ret;
 						}
 					}
