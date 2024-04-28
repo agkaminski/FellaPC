@@ -7,17 +7,22 @@
 #include <stdio.h>
 
 #include "vga.h"
+#include "keyboard.h"
 
 int main(void)
 {
-	char buff[32];
-	uint8_t counter = 0;
+	struct keys keys = { 0 };
+	char buff[80];
 	long wait;
+	int ret;
 
 	vga_clear();
 
 	while (1) {
-		sprintf(buff, "This is the line number %d.\n", counter++);
+		ret = keyboard_scan(&keys);
+		sprintf(buff, "Keys: 0x%02x %.3hhu %.3hhu %.3hhu %.3hhu %.3hhu %.3hhu (%d)\n",
+			keys.mod, keys.keys[0], keys.keys[1], keys.keys[2],
+			keys.keys[3], keys.keys[4], keys.keys[5], ret);
 		vga_puts(buff);
 		for (wait = 0; wait < 1000; ++wait);
 	}
