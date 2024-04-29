@@ -9,6 +9,7 @@
 
 #define COLS 80
 #define ROWS 60
+#define CURSOR (char)219
 
 extern volatile uint8_t g_vsync;
 
@@ -255,7 +256,7 @@ void vga_handleCursor(void)
 		vga_vsync();
 		vga->row = vga_context.row;
 		vga->col = vga_context.col;
-		vga->data = '_';
+		vga->data = CURSOR;
 		cursor.state = 1;
 	}
 	else if (cursor.counter == 64) {
