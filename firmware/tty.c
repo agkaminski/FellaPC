@@ -20,10 +20,18 @@ static char tty_key2ascii(uint8_t mod, uint8_t key)
 	static const char upper[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()\0\0\0\t _+{}|\0:\"~<>?";
 
 	char ret = '\0';
-	int shift = !!(mod & (KEY_MOD_LSHIFT | KEY_MOD_RSHIFT));
+	uint8_t shift = !!(mod & (KEY_MOD_LSHIFT | KEY_MOD_RSHIFT));
+	uint8_t letter = !!((key >= KEY_A) && (key <= KEY_Z));
 
-	if ((key >= 4) && ((key - 4) <= sizeof(lower))) {
-		ret = (shift || (caps && (key >= KEY_A && key <= KEY_Z))) ? upper[key - 4] : lower[key - 4];
+	if (letter && caps) {
+		shift = !shift;
+	}
+
+	if (key >= 4) {
+		key -= 4;
+		if (key <= sizeof(lower)) {
+			ret = shift ? upper[key] : lower[key];
+		}
 	}
 
 	return ret;
