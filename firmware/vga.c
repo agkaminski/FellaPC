@@ -5,7 +5,7 @@
  */
 
 #include "vga.h"
-#include "tty.h"
+#include "via.h"
 
 #define COLS 80
 #define ROWS 60
@@ -262,4 +262,10 @@ void vga_handleCursor(void)
 	else if (cursor.counter == 64) {
 		vga_resetCursor();
 	}
+}
+
+void vga_selectRom(uint8_t rom)
+{
+	via_setDirB(0x30, 0x30);
+	via_setPortB((rom & 0x3) << 4, 0x30);
 }

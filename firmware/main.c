@@ -12,7 +12,7 @@
 
 int main(void)
 {
-	//vga_selectRom(0);
+	vga_selectRom(0);
 	vga_clear();
 
 /*

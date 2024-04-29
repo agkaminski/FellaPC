@@ -37,4 +37,6 @@ void vga_resetCursor(void);
 
 void vga_handleCursor(void);
 
+void vga_selectRom(uint8_t rom);
+
 #endif
