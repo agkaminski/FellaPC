@@ -10,6 +10,8 @@
 #include "keys.h"
 #include "vga.h"
 
+#define AUTOREPEAT_THRESHOLD 50
+
 static uint8_t caps = 0;
 
 static char tty_key2ascii(uint8_t mod, uint8_t key)
@@ -81,6 +83,7 @@ int tty_update(char *cmd)
 {
 	static struct keys keys = { 0 };
 	static uint8_t last_key = KEY_NONE;
+	static uint8_t arcnt = 0;
 	uint8_t key;
 	uint8_t ret;
 
@@ -90,7 +93,17 @@ int tty_update(char *cmd)
 
 	/* Ignore multiple keys being pressed */
 	key = keys.keys[0];
-	if (key != last_key) {
+
+	if (key == last_key && key != KEY_NONE) {
+		if (arcnt < AUTOREPEAT_THRESHOLD) {
+			++arcnt;
+		}
+	}
+	else {
+		arcnt = 0;
+	}
+
+	if (key != last_key || arcnt >= AUTOREPEAT_THRESHOLD) {
 		last_key = key;
 
 		if (key == KEY_ENTER) {
