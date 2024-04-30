@@ -52,7 +52,7 @@ static int tty_handleSpecial(uint8_t mod, uint8_t key)
 			break;
 
 		case KEY_DELETE:
-			vga_putc(' ');
+			vga_set(' ');
 			break;
 
 		case KEY_END:
