@@ -83,10 +83,11 @@ static uint8_t tty_handleSpecial(uint8_t mod, uint8_t key)
 			start = vga_getCol();
 			if (start != 0) {
 				row = vga_getRow();
-				memmove(line + start - 1, line + start, sizeof(line) - start);
-				vga_setCursor(0, row);
-				vga_puts(line);
-				vga_putc(' ');
+				memmove(line + start - 1, line + start, sizeof(line) - start + 2);
+				vga_setCursor(start - 1, row);
+				vga_puts(line + start - 1);
+				vga_set(' ');
+				line[vga_getCol()] = '\0';
 				vga_setCursor(start - 1, row);
 			}
 			break;
