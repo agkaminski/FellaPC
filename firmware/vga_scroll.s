@@ -6,7 +6,6 @@
 ; Consider using HW scrolling in future HW.
 
 .export			_vga_scroll
-.import			_g_vsync
 
 .proc			_vga_scroll: near
 
@@ -29,6 +28,7 @@
 				DEX
 				DEY
 				STY $8002
+
 @row_loop1:		PLA
 				STA $8000
 				DEX

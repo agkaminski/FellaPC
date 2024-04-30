@@ -10,7 +10,7 @@
 
 .segment		"CODE"
 
-				LDY 0
+				LDY #0
 @loop:			LDA $00, Y
 				INY
 				BNE @loop
