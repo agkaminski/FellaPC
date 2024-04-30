@@ -1614,6 +1614,12 @@
 		(uuid "09958ca5-b3d5-48a0-86b3-dd70d2d1fc35")
 	)
 	(junction
+		(at 134.62 146.05)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "143a90dc-b283-46c8-bcd7-054e5d8f4443")
+	)
+	(junction
 		(at 99.06 113.03)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -1853,6 +1859,16 @@
 	)
 	(wire
 		(pts
+			(xy 134.62 142.24) (xy 134.62 146.05)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "48c799ff-0c6d-4fce-9434-ed2b4339335e")
+	)
+	(wire
+		(pts
 			(xy 102.87 63.5) (xy 100.33 63.5)
 		)
 		(stroke
@@ -1993,7 +2009,7 @@
 	)
 	(wire
 		(pts
-			(xy 113.03 146.05) (xy 151.13 146.05)
+			(xy 113.03 146.05) (xy 134.62 146.05)
 		)
 		(stroke
 			(width 0)
@@ -2020,6 +2036,16 @@
 			(type default)
 		)
 		(uuid "75e2f246-8354-40bd-a47c-d72efa3427fe")
+	)
+	(wire
+		(pts
+			(xy 134.62 146.05) (xy 151.13 146.05)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "781b01c8-bccc-478f-b845-ee143ee63ede")
 	)
 	(wire
 		(pts
@@ -2100,6 +2126,16 @@
 			(type default)
 		)
 		(uuid "a2fe87ac-8e1c-4a0a-8655-31f6ae255d90")
+	)
+	(wire
+		(pts
+			(xy 128.27 134.62) (xy 134.62 134.62)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a68a440b-dcc6-4cc4-95e1-906659c5037c")
 	)
 	(wire
 		(pts
@@ -2584,10 +2620,9 @@
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "0f708abe-37f5-486a-bb1a-befafbeeb22f")
 		(property "Reference" "R3"
-			(at 137.16 123.19 90)
+			(at 138.176 124.46 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2595,7 +2630,7 @@
 			)
 		)
 		(property "Value" "10K"
-			(at 137.16 125.73 90)
+			(at 137.414 127 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3388,7 +3423,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "1M"
+		(property "Value" "220K"
 			(at 130.81 124.4599 0)
 			(effects
 				(font
@@ -3842,6 +3877,76 @@
 			(project "fella"
 				(path "/0e49b66d-39aa-4a48-b9a1-8037366b6d94/4b0daece-bd7e-414d-bdd3-87aa553d3255"
 					(reference "C1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 134.62 138.43 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "d0065ae3-127f-413f-993c-3adb0142fbb5")
+		(property "Reference" "C50"
+			(at 138.43 137.1599 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1u"
+			(at 138.43 139.6999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm"
+			(at 135.5852 142.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 134.62 138.43 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor"
+			(at 134.62 138.43 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "70c6d97a-42f7-4531-be1b-16429ee6deb3")
+		)
+		(pin "2"
+			(uuid "b15b539a-e910-45d8-8408-acabeb78a805")
+		)
+		(instances
+			(project "fella"
+				(path "/0e49b66d-39aa-4a48-b9a1-8037366b6d94/4b0daece-bd7e-414d-bdd3-87aa553d3255"
+					(reference "C50")
 					(unit 1)
 				)
 			)

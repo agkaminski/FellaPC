@@ -328,6 +328,16 @@
 	)
 	(wire
 		(pts
+			(xy 132.08 132.08) (xy 132.08 115.57)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "09ed514d-13ca-47a1-8a9c-21c17b2237fa")
+	)
+	(wire
+		(pts
 			(xy 66.04 57.15) (xy 102.87 57.15)
 		)
 		(stroke
@@ -465,16 +475,6 @@
 			(type default)
 		)
 		(uuid "23a7e5b2-c2d4-4e11-8a89-affcd5cafcfc")
-	)
-	(wire
-		(pts
-			(xy 128.27 102.87) (xy 132.08 102.87)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "244a8230-765d-4dab-a80f-bbe76ff5fb6f")
 	)
 	(wire
 		(pts
@@ -635,6 +635,16 @@
 			(type default)
 		)
 		(uuid "47384a0b-4411-4655-bd19-ee9645b2e879")
+	)
+	(wire
+		(pts
+			(xy 132.08 115.57) (xy 128.27 115.57)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4979eb0f-241f-40f4-ac06-17e3271b41e0")
 	)
 	(bus
 		(pts
@@ -1375,16 +1385,6 @@
 			(type default)
 		)
 		(uuid "e3a17fce-be02-4339-98e5-f27c3459cbf4")
-	)
-	(wire
-		(pts
-			(xy 132.08 102.87) (xy 132.08 132.08)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "e4fbdca6-b034-43fd-ba4a-d011194cdf29")
 	)
 	(wire
 		(pts
@@ -2620,16 +2620,6 @@
 			)
 			(uuid "162e62d8-c587-4dee-93ff-c595e307e8c1")
 		)
-		(pin "~{VSYNC}" output
-			(at 128.27 102.87 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-			(uuid "31eae8ba-0b7b-413b-ac57-876835d8df3f")
-		)
 		(pin "ROMSEL1" input
 			(at 128.27 121.92 0)
 			(effects
@@ -2649,6 +2639,16 @@
 				(justify right)
 			)
 			(uuid "086c1753-e647-4521-b673-376d1338dad9")
+		)
+		(pin "~{VBLANK}" output
+			(at 128.27 115.57 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+			(uuid "4c990f23-b1d7-48b5-84ef-b6701f3c4456")
 		)
 		(instances
 			(project "fella"
@@ -2955,16 +2955,6 @@
 				(justify right)
 			)
 			(uuid "31b48fdb-2ea1-4086-a006-294402d69ae8")
-		)
-		(pin "{slash}PH2" output
-			(at 60.96 50.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-			(uuid "a9719f85-ad66-4d79-9912-c5a9255104ef")
 		)
 		(instances
 			(project "fella"
