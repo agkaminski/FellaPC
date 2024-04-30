@@ -7,8 +7,10 @@
 #ifndef TTY_H_
 #define TTY_H_
 
+#include <stdint.h>
+
 void tty_resetCursor(void);
 
-int tty_update(char *cmd);
+int8_t tty_update(char *cmd);
 
 #endif

@@ -9,6 +9,9 @@
 
 #include <stdint.h>
 
+#define VGA_COLS 80
+#define VGA_ROWS 60
+
 void vga_newLine(void);
 
 void vga_vsync(void);
@@ -19,7 +22,9 @@ void vga_set(char c);
 
 char vga_get(void);
 
-uint8_t vga_getLine(char *line);
+uint8_t vga_getCol(void);
+
+uint8_t vga_getRow(void);
 
 void vga_putc(char c);
 
@@ -32,8 +37,6 @@ void vga_setCursor(uint8_t col, uint8_t row);
 void vga_moveCursor(int8_t col, int8_t row);
 
 void vga_tabCursor(void);
-
-void vga_resetCursor(void);
 
 void vga_handleCursor(void);
 

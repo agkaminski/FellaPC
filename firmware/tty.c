@@ -5,6 +5,7 @@
  */
 
 #include <stdint.h>
+#include <string.h>
 
 #include "keyboard.h"
 #include "keys.h"
@@ -13,6 +14,7 @@
 #define AUTOREPEAT_THRESHOLD 50
 
 static uint8_t caps = 0;
+static char line[VGA_COLS + 1];
 
 static char tty_key2ascii(uint8_t mod, uint8_t key)
 {
@@ -37,9 +39,15 @@ static char tty_key2ascii(uint8_t mod, uint8_t key)
 	return ret;
 }
 
-
-static int tty_handleSpecial(uint8_t mod, uint8_t key)
+static void tty_set(char c)
 {
+	line[vga_getCol()] = c;
+	vga_set(c);
+}
+
+static uint8_t tty_handleSpecial(uint8_t mod, uint8_t key)
+{
+	uint8_t start, row;
 	(void)mod;
 
 	switch (key) {
@@ -52,48 +60,50 @@ static int tty_handleSpecial(uint8_t mod, uint8_t key)
 			break;
 
 		case KEY_DELETE:
-			vga_set(' ');
+			tty_set(' ');
 			break;
 
 		case KEY_END:
-			vga_moveCursor(80, 0);
+			while (line[vga_getCol()] != '\0' && vga_getCol() < VGA_COLS - 1) {
+				vga_moveCursor(1, 0);
+			}
 			break;
 
 		case KEY_RIGHT:
-			vga_moveCursor(1, 0);
+			if (line[vga_getCol()] != '\0') {
+				vga_moveCursor(1, 0);
+			}
 			break;
 
 		case KEY_LEFT:
 			vga_moveCursor(-1, 0);
 			break;
 
-		case KEY_DOWN:
-			vga_moveCursor(0, 1);
-			break;
-
-		case KEY_UP:
-			vga_moveCursor(0, -1);
-			break;
-
 		case KEY_BACKSPACE:
-			vga_set(' ');
-			vga_moveCursor(-1, 0);
-			vga_set(' ');
+			start = vga_getCol();
+			if (start != 0) {
+				row = vga_getRow();
+				memmove(line + start - 1, line + start, sizeof(line) - start);
+				vga_setCursor(0, row);
+				vga_puts(line);
+				vga_putc(' ');
+				vga_setCursor(start - 1, row);
+			}
 			break;
 
-		default: return 0;
+		default:
+			return 0;
 	}
 
 	return 1;
 }
 
-int tty_update(char *cmd)
+int8_t tty_update(char *cmd)
 {
 	static struct keys keys = { 0 };
 	static uint8_t last_key = KEY_NONE;
 	static uint8_t arcnt = 0;
 	uint8_t key;
-	uint8_t ret;
 
 	if (keyboard_scan(&keys) < 0) {
 		return -1;
@@ -115,9 +125,10 @@ int tty_update(char *cmd)
 		last_key = key;
 
 		if (key == KEY_ENTER) {
-			ret = vga_getLine(cmd);
+			strcpy(cmd, line);
+			memset(line, '\0', sizeof(line));
 			vga_newLine();
-			return ret;
+			return 1;
 		}
 
 		if (tty_handleSpecial(keys.mod, key)) {
@@ -126,7 +137,8 @@ int tty_update(char *cmd)
 		else {
 			char c = tty_key2ascii(keys.mod, key);
 			if (c != '\0') {
-				vga_putc(c);
+				tty_set(c);
+				vga_moveCursor(1, 0);
 				return 0;
 			}
 		}
