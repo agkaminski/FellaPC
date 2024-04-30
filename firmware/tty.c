@@ -98,6 +98,25 @@ static uint8_t tty_handleSpecial(uint8_t mod, uint8_t key)
 	return 1;
 }
 
+static void tty_insert(char c)
+{
+	uint8_t row, col = vga_getCol();
+
+	if (line[col] != '\0' && col < VGA_COLS - 1) {
+		if (line[VGA_COLS - 1] != '\0') {
+			return;
+		}
+		row = vga_getRow();
+		memmove(line + col + 1, line + col, sizeof(line) - col - 2);
+		line[sizeof(line) - 1] = '\0';
+		vga_puts(line + col + 1);
+		vga_setCursor(col, row);
+	}
+
+	tty_set(c);
+	vga_moveCursor(1, 0);
+}
+
 int8_t tty_update(char *cmd)
 {
 	static struct keys keys = { 0 };
@@ -137,8 +156,7 @@ int8_t tty_update(char *cmd)
 		else {
 			char c = tty_key2ascii(keys.mod, key);
 			if (c != '\0') {
-				tty_set(c);
-				vga_moveCursor(1, 0);
+				tty_insert(c);
 				return 0;
 			}
 		}
