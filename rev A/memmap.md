@@ -3,14 +3,16 @@
 | Start  | End    | Description      |
 |--------|--------|------------------|
 | 0x0000 | 0x7FFF | RAM              |
-| 0x8000 | 0x807F | VGA row data     |
-| 0x8080 | 0x0100 | VGA control      |
+| 0x8000 | 0x8002 | VGA              |
+| 0x8003 | 0x8FFF | VGA aliased      |
 | 0x9000 | 0x900F | Keyboard         |
+| 0x9010 | 0x9FFF | Keyboard aliased |
 | 0xA000 | 0xA00F | Reserved         |
 | 0xA010 | 0xA01F | User port        |
 | 0xA020 | 0xA02F | RS232            |
+| 0xA030 | 0xA03F | Invalid          |
 | 0xA040 | 0xA04F | USB UART         |
-| 0xA050 | 0xAFFF | Reserved         |
+| 0xA050 | 0xAFFF | Invalid          |
 | 0xB000 | 0xBFFF | Expansion        |
 | 0xC000 | 0xFFFF | ROM              |
 
@@ -18,9 +20,9 @@
 
 | Address | Peripheral | Register  | Description                  |
 |---------|------------|-----------|------------------------------|
-| 0x8000  | VGA        | VDATA     | VGA row data (128 registers) |
-| 0x8080  | VGA        | VRA       | VGA row address              |
-| 0x8100  | VGA        | VSCRL     | VGA vertical scroll          |
+| 0x8000  | VGA        | VDR       | VGA data register            |
+| 0x8001  | VGA        | VALR      | VGA column address           |
+| 0x8002  | VGA        | VAHR      | VGA row address              |
 | 0x9000  | Keyboard   | COL0      | Keyboard column #0           |
 | 0x9001  | Keyboard   | COL1      | Keyboard column #1           |
 | 0x9002  | Keyboard   | COL2      | Keyboard column #2           |
