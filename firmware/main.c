@@ -32,7 +32,7 @@ int main(void)
 */
 
 	while (1) {
-		char cmd[80];
+		char cmd[VGA_COLS + 1];
 		vga_vsync();
 		if (tty_update(cmd) > 0) {
 			vga_puts("CMD: ");
