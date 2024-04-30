@@ -3,15 +3,18 @@
 module tb();
 	reg pclk;
 	reg rst_n;
-	wire [9:0] col;
-	wire [9:0] row;
-	wire blank_n;
+	wire [9:3] col;
+	wire [8:0] row;
+	wire blank;
+	wire vblank_n;
 	wire hsync;
 	wire vsync;
 	wire oe_n;
 	wire shload_n;
+	wire [5:0] scroll;
 
 	assign oe_n = 0;
+	assign scroll = 5;
 
 	initial begin
 		rst_n = 0;
@@ -30,11 +33,13 @@ module tb();
 		.rst_n(rst_n),
 		.col(col),
 		.row(row),
-		.blank_n(blank_n),
+		.blank(blank),
+		.vblank_n(vblank_n),
 		.hsync(hsync),
 		.vsync(vsync),
 		.oe_n(oe_n),
-		.shload_n(shload_n)
+		.shload_n(shload_n),
+		.scroll(scroll)
 	);
 
 	initial begin

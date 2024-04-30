@@ -2195,6 +2195,139 @@
 				)
 			)
 		)
+		(symbol "Device:Fuse"
+			(pin_numbers hide)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "F"
+				(at 2.032 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Fuse"
+				(at -1.905 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at -1.778 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Fuse"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "fuse"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "*Fuse*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Fuse_0_1"
+				(rectangle
+					(start -0.762 -2.54)
+					(end 0.762 2.54)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy 0 -2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "Fuse_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
 		(symbol "power:GND"
 			(power)
 			(pin_numbers hide)
@@ -2447,6 +2580,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "a2708b52-f5c8-4fc7-950f-e872c8e45256")
+	)
+	(junction
+		(at 132.08 54.61)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "a2ee11f7-233e-4884-9604-ec18f98a023d")
 	)
 	(junction
 		(at 160.02 68.58)
@@ -2776,7 +2915,7 @@
 	)
 	(wire
 		(pts
-			(xy 132.08 68.58) (xy 132.08 62.23)
+			(xy 132.08 54.61) (xy 132.08 68.58)
 		)
 		(stroke
 			(width 0)
@@ -3013,6 +3152,16 @@
 			(type default)
 		)
 		(uuid "4b8482e8-57ab-4719-aa13-be3d68786af1")
+	)
+	(wire
+		(pts
+			(xy 160.02 54.61) (xy 132.08 54.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4d2a5c92-3a79-4aae-be7e-0711e3ef23f3")
 	)
 	(wire
 		(pts
@@ -3326,7 +3475,7 @@
 	)
 	(wire
 		(pts
-			(xy 160.02 68.58) (xy 160.02 62.23)
+			(xy 160.02 54.61) (xy 160.02 68.58)
 		)
 		(stroke
 			(width 0)
@@ -3683,6 +3832,16 @@
 			(type default)
 		)
 		(uuid "c51bd143-6599-4510-a8f0-0e94c7cd17af")
+	)
+	(wire
+		(pts
+			(xy 132.08 54.61) (xy 132.08 49.53)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c6f55215-0cc2-40ed-b47b-c38b44cfadca")
 	)
 	(wire
 		(pts
@@ -4810,6 +4969,71 @@
 		)
 	)
 	(symbol
+		(lib_id "power:VCC")
+		(at 132.08 41.91 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "509886e6-8704-4c72-a3e9-bed0b4e99822")
+		(property "Reference" "#PWR0192"
+			(at 132.08 45.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "VCC"
+			(at 128.524 40.386 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 132.08 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 132.08 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"VCC\""
+			(at 132.08 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "3416f158-2a0e-466e-be98-21965499daad")
+		)
+		(instances
+			(project "fella"
+				(path "/0e49b66d-39aa-4a48-b9a1-8037366b6d94/51f1375c-7d5b-4ef6-9c62-05d307c98d71"
+					(reference "#PWR0192")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:GND")
 		(at 49.53 88.9 0)
 		(unit 1)
@@ -5375,71 +5599,6 @@
 		)
 	)
 	(symbol
-		(lib_id "power:VCC")
-		(at 132.08 62.23 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "b0c40b5c-ec66-49ac-b1d7-07ace77098d8")
-		(property "Reference" "#PWR091"
-			(at 132.08 66.04 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "VCC"
-			(at 128.524 60.706 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 132.08 62.23 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 132.08 62.23 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"VCC\""
-			(at 132.08 62.23 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "36b87287-ebfe-40ac-9321-d753468a9caf")
-		)
-		(instances
-			(project "fella"
-				(path "/0e49b66d-39aa-4a48-b9a1-8037366b6d94/51f1375c-7d5b-4ef6-9c62-05d307c98d71"
-					(reference "#PWR091")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Device:C")
 		(at 49.53 85.09 0)
 		(unit 1)
@@ -5504,6 +5663,76 @@
 			(project "fella"
 				(path "/0e49b66d-39aa-4a48-b9a1-8037366b6d94/51f1375c-7d5b-4ef6-9c62-05d307c98d71"
 					(reference "C45")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:Fuse")
+		(at 132.08 45.72 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "d83451b7-f5e1-4b12-b56c-b1685ddcf691")
+		(property "Reference" "F2"
+			(at 134.62 44.4499 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "Fuse"
+			(at 134.62 46.9899 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "PCM_Fuse_AKL:Fuse_Littelfuse_395Series"
+			(at 130.302 45.72 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 132.08 45.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Fuse"
+			(at 132.08 45.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "5efeadae-9061-4e97-9e2c-db0a76020708")
+		)
+		(pin "2"
+			(uuid "7685dbde-adcf-427c-b3ca-528418f8abba")
+		)
+		(instances
+			(project "fella"
+				(path "/0e49b66d-39aa-4a48-b9a1-8037366b6d94/51f1375c-7d5b-4ef6-9c62-05d307c98d71"
+					(reference "F2")
 					(unit 1)
 				)
 			)
@@ -5693,71 +5922,6 @@
 			(project "fella"
 				(path "/0e49b66d-39aa-4a48-b9a1-8037366b6d94/51f1375c-7d5b-4ef6-9c62-05d307c98d71"
 					(reference "U35")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:VCC")
-		(at 160.02 62.23 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "e3176162-ba3f-473b-b451-60326938d108")
-		(property "Reference" "#PWR092"
-			(at 160.02 66.04 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "VCC"
-			(at 156.464 60.706 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 160.02 62.23 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 160.02 62.23 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"VCC\""
-			(at 160.02 62.23 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "ce7dafc2-c45e-408e-bc2c-69c406d99ded")
-		)
-		(instances
-			(project "fella"
-				(path "/0e49b66d-39aa-4a48-b9a1-8037366b6d94/51f1375c-7d5b-4ef6-9c62-05d307c98d71"
-					(reference "#PWR092")
 					(unit 1)
 				)
 			)

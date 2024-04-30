@@ -4256,7 +4256,7 @@
 				)
 			)
 		)
-		(property "Value" "SW_Omron_B3FS"
+		(property "Value" "Reset"
 			(at 67.31 124.46 0)
 			(effects
 				(font
