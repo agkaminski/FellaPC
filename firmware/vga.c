@@ -45,7 +45,7 @@ static void vga_resetCursor(void)
 	cursor.state = 0;
 }
 
-static uint8_t vga_putLine(const char *line, uint8_t start)
+static uint8_t vga_putLine(const char *line)
 {
 	/* We strongly assume that line can fit within current column */
 	uint8_t pos;
@@ -53,7 +53,7 @@ static uint8_t vga_putLine(const char *line, uint8_t start)
 	vga_vsync();
 	vga->row = vga_context.row;
 	for (pos = 0; line[pos] != '\0'; ++pos) {
-		vga->col = start + pos;
+		vga->col = vga_context.col + pos;
 		vga->data = line[pos];
 	}
 
@@ -145,56 +145,29 @@ void vga_putc(char c)
 void vga_puts(const char *str)
 {
 	char buff[VGA_COLS + 1];
-	uint8_t cols = 0, pos = 0;
-	uint8_t end = 0;
+	uint8_t pos = 0;
+	char special = '\0';
 
 	vga_resetCursor();
 
-	while (!end) {
-		while ((cols < VGA_COLS - vga_context.col) && !end) {
-			switch (str[pos]) {
-				case '\0':
-					end = 1;
-					break;
-
-				case '\n':
-					if (cols != 0) {
-						buff[cols] = '\0';
-						vga_putLine(buff, vga_context.col);
-						cols = 0;
-					}
-					vga_newLine();
-					break;
-
-				case '\r':
-					if (cols != 0) {
-						buff[cols] = '\0';
-						vga_putLine(buff, vga_context.col);
-						cols = 0;
-					}
-					vga_context.col = 0;
-					break;
-
-				case '\t':
-					if (cols != 0) {
-						buff[cols] = '\0';
-						vga_incCol(vga_putLine(buff, vga_context.col));
-						cols = 0;
-					}
-					vga_incCol(4 - (vga_context.col & 0x3));
-					break;
-
-				default:
-					buff[cols++] = str[pos];
-					break;
+	while (*str != '\0') {
+		for (pos = 0; pos < VGA_COLS - vga_context.col && *str != '\0'; ++pos) {
+			if (*str == '\n' || *str == '\r' || *str =='\t') {
+				special = *(str++);
+				break;
 			}
 
-			++pos;
+			buff[pos] = *(str++);
 		}
 
-		if (cols != 0) {
-			buff[cols] = '\0';
-			vga_incCol(vga_putLine(buff, vga_context.col));
+		if (pos != 0) {
+			buff[pos] = '\0';
+			vga_incCol(vga_putLine(buff));
+		}
+
+		if (special != '\0') {
+			vga_putc(special);
+			special = '\0';
 		}
 	}
 }
