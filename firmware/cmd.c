@@ -69,12 +69,37 @@ static int8_t cmdd_addLine(const char *cmd)
 		++end;
 	}
 
-	if (*end == '\0') {
-		curr = line_head;
-		prev = NULL;
-		while (curr != NULL) {
-			if (curr->number == number) {
-				ufree(curr->data);
+	line = umalloc(sizeof(*line));
+	if (line == NULL) {
+		return -ENOMEM;
+	}
+
+	line->data = NULL;
+	if (*end != '\0') {
+		line->data = umalloc(strlen(end) + 1);
+		if (line->data == NULL) {
+			ufree(line);
+			return -ENOMEM;
+		}
+		strcpy(line->data, end);
+	}
+
+	line->number = number;
+
+	if ((line_head == NULL) && (line->data != NULL)) {
+		line_head = line;
+		line->next = NULL;
+		return 0;
+	}
+
+	curr = line_head;
+	prev = NULL;
+
+	while (curr != NULL) {
+		if (curr->number == line->number) {
+			ufree(curr->data);
+			curr->data = line->data;
+			if (line->data == NULL) {
 				if (prev != NULL) {
 					prev->next = curr->next;
 				}
@@ -82,62 +107,29 @@ static int8_t cmdd_addLine(const char *cmd)
 					line_head = curr->next;
 				}
 				ufree(curr);
-				break;
 			}
-			prev = curr;
-			curr = curr->next;
+			break;
 		}
-		return 0;
+
+		if (curr->number > line->number) {
+			break;
+		}
+
+		prev = curr;
+		curr = curr->next;
 	}
 
-	line = umalloc(sizeof(*line));
-	if (line == NULL) {
-		return -ENOMEM;
-	}
-
-	line->data = umalloc(strlen(end) + 1);
 	if (line->data == NULL) {
 		ufree(line);
-		return -ENOMEM;
-	}
-
-	strcpy(line->data, end);
-
-	line->number = number;
-	if (line_head == NULL) {
-		line_head = line;
-		line->next = NULL;
 	}
 	else {
-		curr = line_head;
-		prev = NULL;
-
-		do {
-			if (curr->number == line->number) {
-				ufree(curr->data);
-				curr->data = line->data;
-				ufree(line);
-				return 0;
-			}
-
-			if (curr->number > line->number) {
-				if (prev != NULL) {
-					line->next = prev->next;
-					prev->next = line;
-				}
-				else {
-					line_head = line;
-					line->next = curr;
-				}
-				return 0;
-			}
-
-			prev = curr;
-			curr = curr->next;
-		} while (curr != NULL);
-
-		prev->next = line;
-		line->next = NULL;
+		if (prev != NULL) {
+			prev->next = line;
+		}
+		else {
+			line_head = line;
+		}
+		line->next = curr;
 	}
 
 	return 0;
