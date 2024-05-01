@@ -26,6 +26,8 @@ uint8_t vga_getCol(void);
 
 uint8_t vga_getRow(void);
 
+uint8_t vga_putLine(const char *line);
+
 void vga_putc(char c);
 
 void vga_puts(const char *str);

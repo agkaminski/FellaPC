@@ -110,8 +110,7 @@ static void tty_insert(char c)
 		row = vga_getRow();
 		memmove(line + col + 1, line + col, sizeof(line) - col - 2);
 		line[sizeof(line) - 1] = '\0';
-		vga_puts(line + col);
-		vga_setCursor(col, row);
+		vga_putLine(line + col);
 	}
 
 	tty_set(c);

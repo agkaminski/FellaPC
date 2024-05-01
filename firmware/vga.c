@@ -45,7 +45,7 @@ static void vga_resetCursor(void)
 	cursor.state = 0;
 }
 
-static uint8_t vga_putLine(const char *line)
+uint8_t vga_putLine(const char *line)
 {
 	/* We strongly assume that line can fit within current column */
 	uint8_t pos;
