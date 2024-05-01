@@ -52,7 +52,7 @@ int main(void)
 		if (tty_update(cmd) > 0) {
 			err = cmd_parse(cmd);
 			if (err < 0) {
-				itoa(err, buff + 6, 10);
+				itoa(-err, buff + 6, 10);
 				vga_puts(buff);
 				vga_putc('\n');
 			}
