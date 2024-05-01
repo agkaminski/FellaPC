@@ -28,7 +28,7 @@ static void cmd_list(void)
 	struct line *curr = line_head;
 
 	while (curr != NULL) {
-		itoa(curr->number, buff, 10);
+		utoa(curr->number, buff, 10);
 		strcat(buff, " ");
 		vga_puts(buff);
 		vga_puts(curr->data);
