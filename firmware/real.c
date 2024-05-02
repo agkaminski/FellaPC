@@ -40,7 +40,7 @@ static void real_shiftRight(real *r)
 	uint8_t rem = 0, t;
 
 	for (i = sizeof(r->m) - 1; i >= 0; --i) {
-		t = (r->m[i] >> 4) | rem;
+		t = (r->m[i] >> 4) | (rem << 4);
 		rem = r->m[i] & 0xf;
 		r->m[i] = t;
 	}
@@ -181,14 +181,14 @@ int8_t real_add(real *o, const real *a, const real *b)
 		SWAP(a, b);
 	}
 
-	*o = *a;
+	memcpy(o, a, sizeof(*o));
 
 	while (o->e < b->e) {
 		real_shiftRight(o);
 		++o->e;
 	}
 
-	memcpy(_real_acc, o->m, sizeof(_real_acc));
+	memcpy(_real_acc, o->m, sizeof(o->m));
 	carry = _real_bcdAdd(b->m);
 	memcpy(o->m, _real_acc, sizeof(o->m));
 
@@ -199,9 +199,8 @@ int8_t real_add(real *o, const real *a, const real *b)
 
 		real_shiftRight(o);
 		++o->e;
+		o->m[sizeof(o->m) - 1] |= 0x10;
 	}
-
-	real_normalize(o);
 
 	return 0;
 }
