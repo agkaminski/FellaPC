@@ -22,6 +22,19 @@ do { \
 	b = _swap; \
 } while (0)
 
+static int8_t real_isZero(real *r)
+{
+	uint8_t i;
+
+	for (i = 0; i < sizeof(r->m); ++i) {
+		if (r->m[i] != 0) {
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
 static void real_shiftLeft(real *r)
 {
 	uint8_t i;
@@ -68,19 +81,10 @@ static int8_t real_cmp(const real *a, const real *b)
 
 void real_normalize(real *r)
 {
-	uint8_t i;
-	int8_t zero = 1;
-
-	for (i = 0; i < sizeof(r->m); ++i) {
-		if (r->m[i] != 0) {
-			zero = 0;
-			break;
-		}
-	}
-
-	if (zero) {
+	if (real_isZero(r)) {
 		r->e = 0;
 		r->s = 1;
+		return;
 	}
 
 	while ((r->m[(PRECISION / 2) - 1] & 0xf0) == 0) {
@@ -97,15 +101,26 @@ void real_rtoa(char *buff, const real *r)
 {
 	int8_t zero = 1;
 	uint8_t i, pos = 0, sign = 0, dot = 1;
-	int16_t e = r->e;
+	int16_t e;
+	real t;
 
-	if (r->s < 0) {
+	memcpy(&t, r, sizeof(t));
+
+	if (t.s < 0) {
 		buff[pos++] = '-';
 		sign = 1;
 	}
 
+	if (!real_isZero(&t) && (t.e < 0) && (t.e > -PRECISION)) {
+		while (((t.m[0] & 0xf) == 0) && (t.e < 0)) {
+			real_shiftRight(&t);
+			++t.e;
+		}
+	}
+	e = t.e;
+
 	for (i = 0; i < PRECISION; ++i) {
-		uint8_t dig = r->m[(PRECISION - i - 1) >> 1];
+		uint8_t dig = t.m[(PRECISION - i - 1) >> 1];
 		if (i & 1) {
 			dig &= 0xf;
 		}
@@ -113,11 +128,9 @@ void real_rtoa(char *buff, const real *r)
 			dig >>= 4;
 		}
 
-		if ((!dig) && zero) {
-			--e;
-			continue;
+		if (dig) {
+			zero = 0;
 		}
-		zero = 0;
 
 		buff[pos++] = '0' + dig;
 	}
@@ -150,6 +163,18 @@ void real_rtoa(char *buff, const real *r)
 			buff[pos - 1] = '\0';
 			--pos;
 		}
+
+		/* Trim leading zeroes */
+		for (i = sign; ; ++i) {
+			if ((buff[i] == '0') && (buff[i + 1] != '.')) {
+				continue;
+			}
+			break;
+		}
+		if (i != sign) {
+			memmove(buff + sign, buff + sign + i, pos - sign - i + 1);
+		}
+		e -= i;
 	}
 
 	if (e != 0) {
