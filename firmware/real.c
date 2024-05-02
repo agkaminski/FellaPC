@@ -29,7 +29,7 @@ static void real_shiftLeft(real *r)
 
 	for (i = 0; i < sizeof(r->m); ++i) {
 		t = (r->m[i] << 4) | rem;
-		rem = r->m[i] & 0xf;
+		rem = r->m[i] >> 4;
 		r->m[i] = t;
 	}
 }
@@ -41,7 +41,7 @@ static void real_shiftRight(real *r)
 
 	for (i = sizeof(r->m) - 1; i >= 0; --i) {
 		t = (r->m[i] >> 4) | rem;
-		rem = r->m[i] >> 4;
+		rem = r->m[i] & 0xf;
 		r->m[i] = t;
 	}
 }
@@ -66,7 +66,7 @@ static int8_t real_cmp(const real *a, const real *b)
 	return 0;
 }
 
-static int8_t real_normalize(real *r)
+void real_normalize(real *r)
 {
 	uint8_t i;
 	int8_t zero = 1;
@@ -81,24 +81,22 @@ static int8_t real_normalize(real *r)
 	if (zero) {
 		r->e = 0;
 		r->s = 1;
-		return 0;
 	}
 
-	while ((r->m[0] & 0xff) == 0) {
-		if (r->e == INT8_MAX) {
-			return -1;
+	while ((r->m[(PRECISION / 2) - 1] & 0xf0) == 0) {
+		if (r->e == INT8_MIN) {
+			break;
 		}
-		real_shiftRight(r);
-		++r->e;
-	}
 
-	return 0;
+		real_shiftLeft(r);
+		--r->e;
+	}
 }
 
 void real_rtoa(char *buff, const real *r)
 {
-	int8_t nzpos = -1;
-	uint8_t i, pos = 0, sign = 0;
+	int8_t zero = 1;
+	uint8_t i, pos = 0, sign = 0, dot = 1;
 	int16_t e = r->e;
 
 	if (r->s < 0) {
@@ -115,18 +113,16 @@ void real_rtoa(char *buff, const real *r)
 			dig >>= 4;
 		}
 
-		if ((!dig) && (nzpos < 0)) {
+		if ((!dig) && zero) {
+			--e;
 			continue;
 		}
-
-		if (nzpos < 0) {
-			nzpos = i;
-		}
+		zero = 0;
 
 		buff[pos++] = '0' + dig;
 	}
 
-	if (nzpos < 0) {
+	if (zero) {
 		buff[0] = '0';
 		buff[1] = '\0';
 		return;
@@ -134,26 +130,26 @@ void real_rtoa(char *buff, const real *r)
 
 	buff[pos] = '\0';
 
-	if ((e > 0) && (e <= nzpos)) {
-		while (e) {
-			buff[pos++] = '0';
-			--e;
-		}
-		buff[pos] = '\0';
+	if ((e > 0) && (e < PRECISION)) {
+		dot += e;
+		e = 0;
 	}
 
-	if ((e != 0) && (nzpos < (PRECISION - 1))) {
-		uint8_t dot = 1;
-		e += PRECISION - nzpos - 1;
-
-		if ((r->e < 0) && (e > 0)) {
-			dot += e;
-			e = 0;
-		}
-
+	if (dot < (pos - sign)) {
 		memmove(buff + sign + dot + 1, buff + sign + dot, pos - dot + 1);
 		buff[dot + sign] = '.';
 		++pos;
+
+		/* Trim trailing zeroes */
+		while (buff[pos - 1] == '0') {
+			buff[pos - 1] = '\0';
+			--pos;
+		}
+
+		if (buff[pos - 1] == '.') {
+			buff[pos - 1] = '\0';
+			--pos;
+		}
 	}
 
 	if (e != 0) {
@@ -205,7 +201,9 @@ int8_t real_add(real *o, const real *a, const real *b)
 		++o->e;
 	}
 
-	return real_normalize(o);
+	real_normalize(o);
+
+	return 0;
 }
 
 int8_t real_sub(real *o, const real *a, const real *b)
@@ -251,7 +249,9 @@ int8_t real_sub(real *o, const real *a, const real *b)
 
 	memcpy(o->m, _real_acc, sizeof(o->m));
 
-	return real_normalize(o);
+	real_normalize(o);
+
+	return 0;
 }
 
 int8_t real_mul(real *o, const real *a, const real *b)
