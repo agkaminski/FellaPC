@@ -208,6 +208,7 @@ int8_t real_add(real *o, const real *a, const real *b)
 int8_t real_sub(real *o, const real *a, const real *b)
 {
 	int8_t cmp;
+	int8_t signswap = 0;
 
 	if (a->s != b->s) {
 		real t;
@@ -218,16 +219,21 @@ int8_t real_sub(real *o, const real *a, const real *b)
 
 	if (b->e < a->e) {
 		SWAP(a, b);
+		signswap = 1;
 	}
 
-	*o = *a;
+	memcpy(o, a, sizeof(*o));
+
+	if (signswap) {
+		o->s = (o->s < 0) ? 1 : -1;
+	}
 
 	while (o->e < b->e) {
 		real_shiftRight(o);
 		++o->e;
 	}
 
-	cmp = real_cmp(a, b);
+	cmp = real_cmp(o, b);
 	switch (cmp) {
 		case 1:
 			memcpy(_real_acc, o->m, sizeof(_real_acc));
@@ -237,6 +243,7 @@ int8_t real_sub(real *o, const real *a, const real *b)
 		case -1:
 			memcpy(_real_acc, b->m, sizeof(_real_acc));
 			_real_bcdSub(o->m);
+			o->s = (o->s < 0) ? 1 : -1;
 			break;
 
 		default:
