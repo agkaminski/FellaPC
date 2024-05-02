@@ -4,7 +4,7 @@ CPU = 6502
 TARGET = $(addsuffix .bin, ${GOAL})
 GHASH = "$(shell git describe --always --dirty)"
 OBJ = main.o dram.o interrupt.o vga_clr.o vga.o keyboard.o vga_scroll.o tty.o via.o \
-ualloc/ualloc.o cmd.o
+ualloc/ualloc.o cmd.o real.o real_bcd.o
 
 .PHONY: clean
 .PRECIOUS: %.asm
