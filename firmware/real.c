@@ -99,7 +99,7 @@ void real_rtoa(char *buff, const real *r)
 {
 	int8_t nzpos = -1;
 	uint8_t i, pos = 0, sign = 0;
-	int8_t e = r->e;
+	int16_t e = r->e;
 
 	if (r->s < 0) {
 		buff[pos++] = '-';
@@ -127,21 +127,33 @@ void real_rtoa(char *buff, const real *r)
 	}
 
 	if (nzpos < 0) {
-		buff[pos++] = '0';
+		buff[0] = '0';
+		buff[1] = '\0';
+		return;
 	}
 
 	buff[pos] = '\0';
 
-	if (e < 0) {
-		uint8_t dot = -e;
-		if (dot > (nzpos - 3)) {
-			dot = (nzpos - 3);
+	if ((e > 0) && (e <= nzpos)) {
+		while (e) {
+			buff[pos++] = '0';
+			--e;
 		}
-		e += dot;
-		dot = nzpos - dot - 2;
+		buff[pos] = '\0';
+	}
+
+	if ((e != 0) && (nzpos < (PRECISION - 1))) {
+		uint8_t dot = 1;
+		e += PRECISION - nzpos - 1;
+
+		if ((r->e < 0) && (e > 0)) {
+			dot += e;
+			e = 0;
+		}
 
 		memmove(buff + sign + dot + 1, buff + sign + dot, pos - dot + 1);
 		buff[dot + sign] = '.';
+		++pos;
 	}
 
 	if (e != 0) {
