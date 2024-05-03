@@ -41,13 +41,13 @@ static char tty_key2ascii(uint8_t mod, uint8_t key)
 
 static void tty_set(char c)
 {
-	line[vga_getCol()] = c;
+	line[g_cursor_col] = c;
 	vga_set(c);
 }
 
 static uint8_t tty_handleSpecial(uint8_t mod, uint8_t key)
 {
-	uint8_t start, row;
+	uint8_t start;
 	(void)mod;
 
 	switch (key) {
@@ -56,7 +56,7 @@ static uint8_t tty_handleSpecial(uint8_t mod, uint8_t key)
 			break;
 
 		case KEY_HOME:
-			vga_moveCursor(-80, 0);
+			g_cursor_col = 0;
 			break;
 
 		case KEY_DELETE:
@@ -64,31 +64,32 @@ static uint8_t tty_handleSpecial(uint8_t mod, uint8_t key)
 			break;
 
 		case KEY_END:
-			while (line[vga_getCol()] != '\0' && vga_getCol() < VGA_COLS - 1) {
-				vga_moveCursor(1, 0);
+			while (line[g_cursor_col] != '\0' && g_cursor_col < VGA_COLS - 1) {
+				++g_cursor_col;
 			}
 			break;
 
 		case KEY_RIGHT:
-			if (line[vga_getCol()] != '\0') {
-				vga_moveCursor(1, 0);
+			if (line[g_cursor_col] != '\0') {
+				++g_cursor_col;
 			}
 			break;
 
 		case KEY_LEFT:
-			vga_moveCursor(-1, 0);
+			if (g_cursor_col > 0) {
+				--g_cursor_col;
+			}
 			break;
 
 		case KEY_BACKSPACE:
-			start = vga_getCol();
+			start = g_cursor_col;
 			if (start != 0) {
-				row = vga_getRow();
 				memmove(line + start - 1, line + start, sizeof(line) - start + 2);
-				vga_setCursor(start - 1, row);
+				g_cursor_col = start - 1;
 				vga_puts(line + start - 1);
 				vga_set(' ');
-				line[vga_getCol()] = '\0';
-				vga_setCursor(start - 1, row);
+				line[g_cursor_col] = '\0';
+				g_cursor_col = start - 1;
 			}
 			break;
 
@@ -101,20 +102,21 @@ static uint8_t tty_handleSpecial(uint8_t mod, uint8_t key)
 
 static void tty_insert(char c)
 {
-	uint8_t row, col = vga_getCol();
+	uint8_t col = g_cursor_col;
 
 	if (line[col] != '\0' && col < VGA_COLS - 1) {
 		if (line[VGA_COLS - 1] != '\0') {
 			return;
 		}
-		row = vga_getRow();
 		memmove(line + col + 1, line + col, sizeof(line) - col - 2);
 		line[sizeof(line) - 1] = '\0';
 		vga_putLine(line + col);
 	}
 
 	tty_set(c);
-	vga_moveCursor(1, 0);
+	if (g_cursor_col < (VGA_COLS - 1)) {
+		++g_cursor_col;
+	}
 }
 
 int8_t tty_update(char *cmd)
@@ -142,6 +144,8 @@ int8_t tty_update(char *cmd)
 
 	if (key != last_key || arcnt >= AUTOREPEAT_THRESHOLD) {
 		last_key = key;
+
+		vga_resetCursor();
 
 		if (key == KEY_ENTER) {
 			strcpy(cmd, line);

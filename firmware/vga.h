@@ -12,6 +12,11 @@
 #define VGA_COLS 80
 #define VGA_ROWS 60
 
+extern uint8_t g_cursor_col;
+extern uint8_t g_cursor_row;
+
+void vga_resetCursor(void);
+
 void vga_newLine(void);
 
 void vga_vsync(void);
@@ -22,10 +27,6 @@ void vga_set(char c);
 
 char vga_get(void);
 
-uint8_t vga_getCol(void);
-
-uint8_t vga_getRow(void);
-
 uint8_t vga_putLine(const char *line);
 
 void vga_putc(char c);
@@ -33,10 +34,6 @@ void vga_putc(char c);
 void vga_puts(const char *str);
 
 void vga_clear(void);
-
-void vga_setCursor(uint8_t col, uint8_t row);
-
-void vga_moveCursor(int8_t col, int8_t row);
 
 void vga_tabCursor(void);
 

@@ -13,16 +13,14 @@ extern volatile uint8_t g_vsync;
 
 extern void vga_clr(void);
 
+uint8_t g_cursor_col;
+uint8_t g_cursor_row;
+
 static struct {
 	volatile uint8_t data;
 	volatile uint8_t col;
 	volatile uint8_t row;
 } * const vga = (void *)0x8000;
-
-static struct {
-	uint8_t col;
-	uint8_t row;
-} vga_context;
 
 static struct {
 	uint8_t counter;
@@ -36,7 +34,7 @@ void vga_vsync(void)
 	while (!g_vsync);
 }
 
-static void vga_resetCursor(void)
+void vga_resetCursor(void)
 {
 	cursor.counter = 0;
 	if (cursor.state) {
@@ -51,9 +49,9 @@ uint8_t vga_putLine(const char *line)
 	uint8_t pos;
 
 	vga_vsync();
-	vga->row = vga_context.row;
+	vga->row = g_cursor_row;
 	for (pos = 0; line[pos] != '\0'; ++pos) {
-		vga->col = vga_context.col + pos;
+		vga->col = g_cursor_col + pos;
 		vga->data = line[pos];
 	}
 
@@ -63,19 +61,19 @@ uint8_t vga_putLine(const char *line)
 void vga_newLine(void)
 {
 	vga_resetCursor();
-	vga_context.col = 0;
-	if (vga_context.row >= VGA_ROWS - 1) {
+	g_cursor_col = 0;
+	if (g_cursor_row >= VGA_ROWS - 1) {
 		vga_scroll();
 	}
 	else {
-		++vga_context.row;
+		++g_cursor_row;
 	}
 }
 
 static void vga_incCol(uint8_t count)
 {
-	vga_context.col += count;
-	if (vga_context.col >= VGA_COLS) {
+	g_cursor_col += count;
+	if (g_cursor_col >= VGA_COLS) {
 		vga_newLine();
 	}
 }
@@ -83,8 +81,8 @@ static void vga_incCol(uint8_t count)
 void vga_set(char c)
 {
 	vga_vsync();
-	vga->row = vga_context.row;
-	vga->col = vga_context.col;
+	vga->row = g_cursor_row;
+	vga->col = g_cursor_col;
 	vga->data = c;
 	cursor.prev = c;
 }
@@ -96,20 +94,10 @@ char vga_get(void)
 	}
 	else {
 		vga_vsync();
-		vga->row = vga_context.row;
-		vga->col = vga_context.col;
+		vga->row = g_cursor_row;
+		vga->col = g_cursor_col;
 		return vga->data;
 	}
-}
-
-uint8_t vga_getCol(void)
-{
-	return vga_context.col;
-}
-
-uint8_t vga_getRow(void)
-{
-	return vga_context.row;
 }
 
 void vga_putc(char c)
@@ -125,17 +113,17 @@ void vga_putc(char c)
 			break;
 
 		case '\r':
-			vga_context.col = 0;
+			g_cursor_col = 0;
 			break;
 
 		case '\t':
-			vga_incCol(4 - (vga_context.col & 0x3));
+			vga_incCol(4 - (g_cursor_col & 0x3));
 			break;
 
 		default:
 			vga_vsync();
-			vga->row = vga_context.row;
-			vga->col = vga_context.col;
+			vga->row = g_cursor_row;
+			vga->col = g_cursor_col;
 			vga->data = c;
 			vga_incCol(1);
 			break;
@@ -151,7 +139,7 @@ void vga_puts(const char *str)
 	vga_resetCursor();
 
 	while (*str != '\0') {
-		for (pos = 0; pos < VGA_COLS - vga_context.col && *str != '\0'; ++pos) {
+		for (pos = 0; pos < VGA_COLS - g_cursor_col && *str != '\0'; ++pos) {
 			if (*str == '\n' || *str == '\r' || *str =='\t') {
 				special = *(str++);
 				break;
@@ -175,41 +163,9 @@ void vga_puts(const char *str)
 void vga_clear(void)
 {
 	vga_resetCursor();
-	vga_context.col = 0;
-	vga_context.row = 0;
+	g_cursor_col = 0;
+	g_cursor_row = 0;
 	vga_clr();
-}
-
-void vga_setCursor(uint8_t col, uint8_t row)
-{
-	vga_resetCursor();
-	vga_context.col = col;
-	vga_context.row = row;
-}
-
-void vga_moveCursor(int8_t col, int8_t row)
-{
-	int8_t tcol = vga_context.col + col;
-	int8_t trow = vga_context.row + row;
-
-	if (tcol < 0) {
-		tcol = 0;
-	}
-	else if (tcol >= VGA_COLS) {
-		tcol = VGA_COLS -1;
-	}
-
-	if (trow < 0) {
-		trow = 0;
-	}
-	else if (trow >= VGA_ROWS) {
-		trow = VGA_ROWS - 1;
-	}
-
-	vga_resetCursor();
-
-	vga_context.col = tcol;
-	vga_context.row = trow;
 }
 
 void vga_handleCursor(void)
@@ -219,8 +175,8 @@ void vga_handleCursor(void)
 		cursor.state = 0;
 		cursor.prev = vga_get();
 		vga_vsync();
-		vga->row = vga_context.row;
-		vga->col = vga_context.col;
+		vga->row = g_cursor_row;
+		vga->col = g_cursor_col;
 		vga->data = CURSOR;
 		cursor.state = 1;
 	}
