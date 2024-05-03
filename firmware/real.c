@@ -6,6 +6,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "real.h"
 
@@ -177,12 +178,63 @@ void real_rtoa(char *buff, const real *r)
 	}
 }
 
-int8_t real_ator(const char *buff, real *r)
+const char *real_ator(const char *buff, real *r)
 {
-	/* TODO */
-	(void)buff;
-	(void)r;
-	return -1;
+	int8_t dot = 0, mpos;
+	uint8_t pos = 0;
+
+	memset(r->m, 0, sizeof(r->m));
+	r->s = 1;
+	r->e = -1;
+
+	if (buff[pos] == '-') {
+		r->s = -1;
+		++pos;
+	}
+
+	while (buff[pos] == '0') {
+		++pos;
+	}
+
+	if (buff[pos] == '.') {
+		++pos;
+		while (buff[pos] == '0') {
+			++pos;
+			--r->e;
+		}
+		dot = 1;
+	}
+
+	for (mpos = PRECISION - 1; mpos >= 0; --mpos) {
+		char digit;
+		if (!isdigit(buff[pos])) {
+			if ((buff[pos] == '.') && !dot) {
+				dot = 1;
+				++pos;
+				if (!isdigit(buff[pos])) {
+					break;
+				}
+			}
+			else {
+				break;
+			}
+		}
+		digit = buff[pos++] - '0';
+		r->m[mpos >> 1] |= (mpos & 1) ? (digit << 4) : digit;
+
+		if (!dot) {
+			++r->e;
+		}
+	}
+
+	if ((buff[pos] == 'E') || (buff[pos] == 'e')) {
+		r->e += atoi(&buff[++pos]);
+		 while (isdigit(buff[pos])) {
+			++pos;
+		}
+	}
+
+	return &buff[pos];
 }
 
 int8_t real_add(real *o, const real *a, const real *b)
