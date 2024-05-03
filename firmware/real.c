@@ -10,10 +10,8 @@
 
 #include "real.h"
 
-uint8_t _real_acc[PRECISION / 2];
-
-extern uint8_t _real_bcdAdd(const uint8_t *a);
-extern void _real_bcdSub(const uint8_t *a);
+extern uint8_t _real_bcdAdd(uint8_t *a, uint8_t *b);
+extern void _real_bcdSub(uint8_t *a, uint8_t *b);
 
 static const real rzero = { { 0, 0, 0, 0, 0 }, 0, 1 };
 
@@ -28,7 +26,7 @@ do { \
 #define LOW(x) ((x) & 0xf)
 #define HIGH(x) ((x) >> 4)
 
-static int8_t real_isZero(real *r)
+static int8_t real_isZero(const real *r)
 {
 	uint8_t i;
 
@@ -259,9 +257,7 @@ int8_t real_add(real *o, const real *a, const real *b)
 		++o->e;
 	}
 
-	memcpy(_real_acc, o->m, sizeof(o->m));
-	carry = _real_bcdAdd(b->m);
-	memcpy(o->m, _real_acc, sizeof(o->m));
+	carry = _real_bcdAdd(o->m, b->m);
 
 	if (carry) {
 		if (o->e == INT8_MAX) {
@@ -280,6 +276,7 @@ int8_t real_sub(real *o, const real *a, const real *b)
 {
 	int8_t cmp;
 	int8_t signswap = 0;
+	uint8_t temp[PRECISION / 2];
 
 	if (a->s != b->s) {
 		real t;
@@ -307,13 +304,13 @@ int8_t real_sub(real *o, const real *a, const real *b)
 	cmp = real_cmp(o, b);
 	switch (cmp) {
 		case 1:
-			memcpy(_real_acc, o->m, sizeof(_real_acc));
-			_real_bcdSub(b->m);
+			_real_bcdSub(o->m, b->m);
 			break;
 
 		case -1:
-			memcpy(_real_acc, b->m, sizeof(_real_acc));
-			_real_bcdSub(o->m);
+			memcpy(temp, b->m, sizeof(temp));
+			_real_bcdSub(temp, o->m);
+			memcpy(o->m, temp, sizeof(o->m));
 			o->s = (o->s < 0) ? 1 : -1;
 			break;
 
@@ -321,8 +318,6 @@ int8_t real_sub(real *o, const real *a, const real *b)
 			memcpy(o, &rzero, sizeof(*o));
 			return 0;
 	}
-
-	memcpy(o->m, _real_acc, sizeof(o->m));
 
 	real_normalize(o);
 

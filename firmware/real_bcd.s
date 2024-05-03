@@ -4,26 +4,25 @@
 .export			__real_bcdAdd
 .export			__real_bcdSub
 
-.import			__real_acc
-.importzp		sreg
+.importzp		sp, ptr1
 
 .proc			__real_bcdAdd: near
 
 .segment		"CODE"
 
-				STA sreg
-				STX sreg + 1
+				STA ptr1
+				STX ptr1 + 1
 				LDX #0
 				LDY #0
 				CLC
 				SED
 				PHP
 
-@loop:			LDA __real_acc, Y
+@loop:			LDA ptr1, Y
 				PLP
-				ADC (sreg), Y
+				ADC (sp), Y
 				PHP
-				STA __real_acc, Y
+				STA ptr1, Y
 				INY
 				CPY #5
 				BNE @loop
@@ -32,7 +31,10 @@
 				LDA #0
 				BCC @ncarry
 				LDA #1
+
 @ncarry:		CLD
+				INC sp
+				INC sp
 				RTS
 
 .endproc
@@ -45,25 +47,27 @@
 
 .segment		"CODE"
 
-				STA sreg
-				STX sreg + 1
+				STA ptr1
+				STX ptr1 + 1
 				LDX #0
 				LDY #0
 				SEC
 				SED
 				PHP
 
-@loop:			LDA __real_acc, Y
+@loop:			LDA ptr1, Y
 				PLP
-				SBC (sreg), Y
+				SBC (sp), Y
 				PHP
-				STA __real_acc, Y
+				STA ptr1, Y
 				INY
 				CPY #5
 				BNE @loop
 				PLP
 
 				CLD
+				INC sp
+				INC sp
 				RTS
 
 .endproc
