@@ -225,8 +225,17 @@ const char *real_ator(const char *buff, real *r)
 		}
 	}
 
+	while (isdigit(buff[pos])) {
+		++r->e;
+		++pos;
+	}
+
 	if ((buff[pos] == 'E') || (buff[pos] == 'e')) {
-		r->e += atoi(&buff[++pos]);
+		int e = atoi(&buff[++pos]) + r->e;
+		if (e > INT8_MAX) {
+			return NULL;
+		}
+		r->e = e;
 		 while (isdigit(buff[pos])) {
 			++pos;
 		}
