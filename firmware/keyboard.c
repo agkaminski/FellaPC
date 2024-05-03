@@ -113,10 +113,8 @@ int keyboard_scan(struct keys *keys)
 {
 	/* Check Fn key before, so we know what to do */
 	int isFn = !(base[9] & (1 << 4));
+
 	uint8_t i;
-
-	keys->mod = 0;
-
 	for (i = 0; i < 16; ++i) {
 		uint8_t row = ~base[i];
 		uint8_t change = row ^ lastState[i];
@@ -131,9 +129,10 @@ int keyboard_scan(struct keys *keys)
 					uint8_t modifier = getModifier(key);
 					uint8_t state = !!(row & (1 << j));
 					if (modifier) {
-						if (state) {
+						if (state)
 							keys->mod |= modifier;
-						}
+						else
+							keys->mod &= ~modifier;
 					}
 					else {
 						int ret;
