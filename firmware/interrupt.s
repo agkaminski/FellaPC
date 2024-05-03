@@ -11,11 +11,11 @@
 ; ---------------------------------------------------------------------------
 ; Non-maskable interrupt (NMI) service routine
 
-.segment		"BSS"
+.segment		"ZEROPAGE"
 
 _g_vsync:		.res 1
 
-.export			_g_vsync
+.exportzp		_g_vsync
 
 .segment		"CODE"
 

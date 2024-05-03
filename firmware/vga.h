@@ -12,8 +12,10 @@
 #define VGA_COLS 80
 #define VGA_ROWS 60
 
-extern uint8_t g_cursor_col;
-extern uint8_t g_cursor_row;
+extern volatile uint8_t g_cursor_col;
+extern volatile uint8_t g_cursor_row;
+#pragma zpsym("g_cursor_col")
+#pragma zpsym("g_cursor_row")
 
 void vga_resetCursor(void);
 
@@ -34,8 +36,6 @@ void vga_putc(char c);
 void vga_puts(const char *str);
 
 void vga_clear(void);
-
-void vga_tabCursor(void);
 
 void vga_handleCursor(void);
 
