@@ -9,7 +9,7 @@
 
 #include "real.h"
 
-uint8_t _real_acc[PRECISION];
+uint8_t _real_acc[PRECISION / 2];
 
 extern uint8_t _real_bcdAdd(const uint8_t *a);
 extern void _real_bcdSub(const uint8_t *a);
@@ -99,19 +99,24 @@ void real_normalize(real *r)
 
 void real_rtoa(char *buff, const real *r)
 {
-	int8_t zero = 1;
 	uint8_t i, pos = 0, sign = 0, dot = 1;
 	int16_t e;
 	real t;
 
 	memcpy(&t, r, sizeof(t));
 
+	if (real_isZero(&t)) {
+		buff[0] = '0';
+		buff[1] = '\0';
+		return;
+	}
+
 	if (t.s < 0) {
 		buff[pos++] = '-';
 		sign = 1;
 	}
 
-	if (!real_isZero(&t) && (t.e < 0) && (t.e > -PRECISION)) {
+	if ((t.e < 0) && (t.e > -PRECISION)) {
 		while (((t.m[0] & 0xf) == 0) && (t.e < 0)) {
 			real_shiftRight(&t);
 			++t.e;
@@ -128,17 +133,7 @@ void real_rtoa(char *buff, const real *r)
 			dig >>= 4;
 		}
 
-		if (dig) {
-			zero = 0;
-		}
-
 		buff[pos++] = '0' + dig;
-	}
-
-	if (zero) {
-		buff[0] = '0';
-		buff[1] = '\0';
-		return;
 	}
 
 	buff[pos] = '\0';
