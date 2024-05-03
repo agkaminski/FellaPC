@@ -14,6 +14,8 @@ uint8_t _real_acc[PRECISION / 2];
 extern uint8_t _real_bcdAdd(const uint8_t *a);
 extern void _real_bcdSub(const uint8_t *a);
 
+static const real rzero = { { 0, 0, 0, 0, 0 }, 0, 1 };
+
 /* Macro is cheaper than function, what a crazy compiler it is */
 #define SWAP(a, b) \
 do { \
@@ -21,6 +23,9 @@ do { \
 	a = b; \
 	b = _swap; \
 } while (0)
+
+#define LOW(x) ((x) & 0xf)
+#define HIGH(x) ((x) >> 4)
 
 static int8_t real_isZero(real *r)
 {
@@ -126,13 +131,7 @@ void real_rtoa(char *buff, const real *r)
 
 	for (i = 0; i < PRECISION; ++i) {
 		uint8_t dig = t.m[(PRECISION - i - 1) >> 1];
-		if (i & 1) {
-			dig &= 0xf;
-		}
-		else {
-			dig >>= 4;
-		}
-
+		dig = (i & 1) ? LOW(dig) : HIGH(dig);
 		buff[pos++] = '0' + dig;
 	}
 
@@ -267,9 +266,7 @@ int8_t real_sub(real *o, const real *a, const real *b)
 			break;
 
 		default:
-			memset(o->m, 0, sizeof(o->m));
-			o->e = 0;
-			o->s = 1;
+			memcpy(o, &rzero, sizeof(*o));
 			return 0;
 	}
 
@@ -282,11 +279,32 @@ int8_t real_sub(real *o, const real *a, const real *b)
 
 int8_t real_mul(real *o, const real *a, const real *b)
 {
-	/* TODO */
-	(void)o;
-	(void)a;
-	(void)b;
-	return -1;
+	real t, acc;
+	uint8_t i;
+
+	memcpy(o, &rzero, sizeof(*o));
+	memcpy(&acc, &rzero, sizeof(t));
+	memcpy(&t, a, sizeof(t));
+
+	t.e -= 9;
+
+	for (i = 0; i < PRECISION; ++i) {
+		uint8_t cnt = b->m[i >> 1];
+		cnt = (i & 1) ? HIGH(cnt) : LOW(cnt);
+
+		while (cnt--) {
+			if (real_add(o, &acc, &t) < 0) {
+				return -1;
+			}
+			memcpy(&acc, o, sizeof(acc));
+		}
+		++t.e;
+	}
+
+	o->e += b->e;
+	o->s = (a->s == b->s) ? 1 : -1;
+
+	return 0;
 }
 
 int8_t real_div(real *o, const real *a, const real *b)
