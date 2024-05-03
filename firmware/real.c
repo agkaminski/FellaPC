@@ -167,7 +167,7 @@ void real_rtoa(char *buff, const real *r)
 		if (i != sign) {
 			memmove(buff + sign, buff + sign + i, pos - sign - i + 1);
 		}
-		e -= i;
+		e -= i - sign;
 	}
 
 	if (e != 0) {
