@@ -16,6 +16,7 @@
 #include "vga.h"
 #include "real.h"
 #include "keyboard.h"
+#include "tty.h"
 
 static uint16_t line_curr;
 static uint16_t line_next;
@@ -211,8 +212,62 @@ static int8_t intr_print(struct token *tstr)
 
 static int8_t intr_input(struct token *tstr)
 {
-	/* TODO */
-	return -ENOSYS;
+	const char *prompt;
+	struct variable *var;
+	int8_t err;
+	char cmd[81];
+
+	tstr = tstr->next;
+	if (tstr == NULL) {
+		return -EINVAL;
+	}
+
+	if (tstr->type == token_str) {
+		prompt = tstr->value;
+
+		tstr = tstr->next;
+		if ((tstr == NULL) || (tstr->type != token_coma)) {
+			return -EINVAL;
+		}
+
+		tstr = tstr->next;
+		if (tstr == NULL) {
+			return -EINVAL;
+		}
+	}
+
+	if (tstr->type != token_var) {
+		return -EINVAL;
+	}
+
+	err = intr_getVar(&var, tstr->value, 1);
+	if (err < 0) {
+		return err;
+	}
+
+	if (tstr->next != NULL) {
+		return -EINVAL;
+	}
+
+	vga_puts(prompt);
+	vga_putc('\n');
+
+	do {
+		vga_vsync();
+		err = tty_update(cmd);
+		if (err < 0) {
+			return err;
+		}
+	} while (err <= 0);
+
+	/* TODO add strings */
+
+	err = real_ator(cmd, &var->val);
+	if (err < 0) {
+		return err;
+	}
+
+	return 0;
 }
 
 static int8_t intr_for(struct token *tstr)
