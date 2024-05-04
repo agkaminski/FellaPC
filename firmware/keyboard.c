@@ -19,6 +19,8 @@ static uint8_t * const base = (void *)0x9000;
 
 static uint8_t lastState[16];
 
+struct keys keyboard_keys = { 0 };
+
 static const uint16_t map[5][16] = {
 {
 	K(KEY_ESC, KEY_GRAVE), K(KEY_1, KEY_F1), K(KEY_2, KEY_F2),
@@ -73,13 +75,13 @@ static uint8_t getModifier(uint8_t key)
 	}
 }
 
-static int keyPress(struct keys *keys, uint8_t key)
+static int8_t keyPress(uint8_t key)
 {
-	size_t i;
+	uint8_t i;
 	/* Find first free place */
-	for (i = 0; i < sizeof(keys->keys) / sizeof(keys->keys[0]); ++i) {
-		if (keys->keys[i] == KEY_NONE) {
-			keys->keys[i] = key;
+	for (i = 0; i < sizeof(keyboard_keys.keys) / sizeof(keyboard_keys.keys[0]); ++i) {
+		if (keyboard_keys.keys[i] == KEY_NONE) {
+			keyboard_keys.keys[i] = key;
 			return 0;
 		}
 	}
@@ -88,18 +90,18 @@ static int keyPress(struct keys *keys, uint8_t key)
 	return -1;
 }
 
-static int keyRelease(struct keys *keys, uint8_t key)
+static int8_t keyRelease(uint8_t key)
 {
-	size_t i;
+	uint8_t i;
 
-	for (i = 0; i < sizeof(keys->keys) / sizeof(keys->keys[0]); ++i) {
-		if (keys->keys[i] == key) {
+	for (i = 0; i < sizeof(keyboard_keys.keys) / sizeof(keyboard_keys.keys[0]); ++i) {
+		if (keyboard_keys.keys[i] == key) {
 			/* Remove and compress */
-			for (; i < sizeof(keys->keys) / sizeof(keys->keys[0]) - 1; ++i) {
-				keys->keys[i] = keys->keys[i + 1];
+			for (; i < sizeof(keyboard_keys.keys) / sizeof(keyboard_keys.keys[0]) - 1; ++i) {
+				keyboard_keys.keys[i] = keyboard_keys.keys[i + 1];
 			}
 
-			keys->keys[i] = KEY_NONE;
+			keyboard_keys.keys[i] = KEY_NONE;
 
 			return 0;
 		}
@@ -109,10 +111,10 @@ static int keyRelease(struct keys *keys, uint8_t key)
 	return -1;
 }
 
-int keyboard_scan(struct keys *keys)
+int8_t keyboard_scan(void)
 {
 	/* Check Fn key before, so we know what to do */
-	int isFn = !(base[9] & (1 << 4));
+	int8_t isFn = !(base[9] & (1 << 4));
 
 	uint8_t i;
 	for (i = 0; i < 16; ++i) {
@@ -130,27 +132,27 @@ int keyboard_scan(struct keys *keys)
 					uint8_t state = !!(row & (1 << j));
 					if (modifier) {
 						if (state)
-							keys->mod |= modifier;
+							keyboard_keys.mod |= modifier;
 						else
-							keys->mod &= ~modifier;
+							keyboard_keys.mod &= ~modifier;
 					}
 					else {
-						int ret;
+						int8_t ret;
 						if (row & (1 << j)) {
-							ret = keyPress(keys, key);
+							ret = keyPress(key);
 						}
 						else {
-							ret = keyRelease(keys, key);
+							ret = keyRelease(key);
 							if (ret < 0) {
 								/* Handle edge case of Fn being released or pressed when the
 								 * modified key is still pressed */
-								ret = keyRelease(keys, isFn ? MAIN(map[j][i]) : ALT(map[j][i]));
+								ret = keyRelease(isFn ? MAIN(map[j][i]) : ALT(map[j][i]));
 							}
 						}
 
 						if (ret < 0) {
 							/* Overflow - reset everything to allow reliable recovery */
-							memset(keys, 0, sizeof(*keys));
+							memset(&keyboard_keys, 0, sizeof(keyboard_keys));
 							memset(lastState, 0, sizeof(lastState));
 							return ret;
 						}

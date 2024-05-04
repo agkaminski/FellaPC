@@ -9,11 +9,15 @@
 
 #include <stdint.h>
 
+#include "keys.h"
+
 struct keys {
 	uint8_t mod;
 	uint8_t keys[6];
 };
 
-int keyboard_scan(struct keys *keys);
+extern struct keys keyboard_keys;
+
+int8_t keyboard_scan(void);
 
 #endif

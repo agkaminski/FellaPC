@@ -121,17 +121,16 @@ static void tty_insert(char c)
 
 int8_t tty_update(char *cmd)
 {
-	static struct keys keys = { 0 };
 	static uint8_t last_key = KEY_NONE;
 	static uint8_t arcnt = 0;
 	uint8_t key;
 
-	if (keyboard_scan(&keys) < 0) {
+	if (keyboard_scan() < 0) {
 		return -1;
 	}
 
 	/* Ignore multiple keys being pressed */
-	key = keys.keys[0];
+	key = keyboard_keys.keys[0];
 
 	if (key == last_key && key != KEY_NONE) {
 		if (arcnt < AUTOREPEAT_THRESHOLD) {
@@ -154,11 +153,11 @@ int8_t tty_update(char *cmd)
 			return 1;
 		}
 
-		if (tty_handleSpecial(keys.mod, key)) {
+		if (tty_handleSpecial(keyboard_keys.mod, key)) {
 			return 0;
 		}
 		else {
-			char c = tty_key2ascii(keys.mod, key);
+			char c = tty_key2ascii(keyboard_keys.mod, key);
 			if (c != '\0') {
 				tty_insert(c);
 				return 0;
