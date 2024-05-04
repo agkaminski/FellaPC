@@ -9,9 +9,12 @@
 
 #include <stdint.h>
 #include "token.h"
+#include "cmd.h"
 
 void intr_clean(int8_t hard);
 
-int8_t interpreter(struct token *tstr);
+int8_t intr_line(const char *line);
+
+int8_t intr_run(struct line *start);
 
 #endif

@@ -11,16 +11,11 @@
 #include <ctype.h>
 #include <errno.h>
 
+#include "cmd.h"
 #include "ualloc/ualloc.h"
 #include "vga.h"
 #include "token.h"
 #include "interpreter.h"
-
-struct line {
-	uint16_t number;
-	struct line *next;
-	char *data;
-};
 
 static struct line *line_head = NULL;
 
@@ -153,12 +148,11 @@ int8_t cmd_parse(const char *cmd)
 	else if (strcasecmp(cmd, "new") == 0) {
 		cmd_new();
 	}
+	else if (strcasecmp(cmd, "run") == 0) {
+		err = intr_run(line_head);
+	}
 	else if (*cmd != '\0') {
-		err = token_tokenize(&tstr, cmd);
-		if (err >= 0) {
-			err = interpreter(tstr);
-			token_free(tstr);
-		}
+		err = intr_line(cmd);
 	}
 
 	return err;

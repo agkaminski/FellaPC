@@ -124,7 +124,7 @@ static int8_t intr_isInteger(struct token *token)
 static int8_t intr_var(struct token *tstr)
 {
 	struct variable *var;
-	int err;
+	int8_t err;
 
 	err = intr_getVar(&var, tstr->value, 1);
 	if (err < 0) {
@@ -214,7 +214,7 @@ static int8_t intr_for(struct token *tstr)
 	struct variable *iter;
 	struct for_elem *f;
 	real limit, step;
-	int err;
+	int8_t err;
 
 	memcpy(&step, &rone, sizeof(real));
 
@@ -284,7 +284,7 @@ static int8_t intr_next(struct token *tstr)
 {
 	struct variable *var;
 	struct for_elem *f = for_stack, *prev = NULL;
-	int err;
+	int8_t err;
 	real acc;
 
 	tstr = tstr->next;
@@ -461,8 +461,10 @@ void intr_clean(int8_t hard)
 	}
 }
 
-int8_t interpreter(struct token *tstr)
+int8_t intr_line(const char *line)
 {
+	int8_t err;
+	struct token *tstr;
 	int8_t (*const entry[])(struct token *) = {
 		intr_var,
 		intr_print,
@@ -477,9 +479,20 @@ int8_t interpreter(struct token *tstr)
 		intr_clear
 	};
 
-	if (tstr->type >= (sizeof(entry) / sizeof(*entry))) {
-		return -EINVAL;
+	err = token_tokenize(&tstr, line);
+	if (err >= 0) {
+		err = -EINVAL;
+		if (tstr->type < (sizeof(entry) / sizeof(*entry))) {
+			err = entry[tstr->type](tstr);
+		}
 	}
 
-	return entry[tstr->type](tstr);
+	token_free(tstr);
+
+	return err;
+}
+
+int8_t intr_run(struct line *start)
+{
+
 }
