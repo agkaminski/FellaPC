@@ -34,6 +34,16 @@ struct variable {
 
 static struct variable *variables = NULL;
 
+struct for_elem {
+	struct for_elem *next;
+	uint16_t line;
+	struct variable *iter;
+	real limit;
+	real step;
+};
+
+struct for_elem *for_stack = NULL;
+
 static int8_t intr_getVar(struct variable **var, const char *name, int8_t create)
 {
 	(*var) = variables;
@@ -201,12 +211,122 @@ static int8_t intr_input(struct token *tstr)
 
 static int8_t intr_for(struct token *tstr)
 {
+	struct variable *iter;
+	struct for_elem *f;
+	real limit, step;
+	int err;
 
+	memcpy(&step, &rone, sizeof(real));
+
+	tstr = tstr->next;
+	if (tstr->type != token_var) {
+		return -EINVAL;
+	}
+
+	err = intr_getVar(&iter, tstr->value, 1);
+	if (err < 0) {
+		return err;
+	}
+
+	tstr = tstr->next;
+	if (tstr->type != token_eq) {
+		return -EINVAL;
+	}
+
+	tstr = tstr->next;
+	err = intr_collapseExp(&iter->val, tstr, &tstr);
+	if (err < 0) {
+		return err;
+	}
+
+	if (tstr->type != token_to) {
+		return -EINVAL;
+	}
+
+	tstr = tstr->next;
+	err = intr_collapseExp(&limit, tstr, &tstr);
+	if (err < 0) {
+		return err;
+	}
+
+	if (tstr != NULL) {
+		if (tstr->type != token_step) {
+			return -EINVAL;
+		}
+
+		tstr = tstr->next;
+		err = intr_collapseExp(&step, tstr, &tstr);
+		if (err < 0) {
+			return err;
+		}
+
+		if (tstr != NULL) {
+			return -EINVAL;
+		}
+	}
+
+	f = umalloc(sizeof(*f));
+	if (f == NULL) {
+		return -ENOMEM;
+	}
+
+	f->line = line_next;
+	f->iter = iter;
+	f->limit = limit;
+	f->step = step;
+	f->next = for_stack;
+	for_stack = f;
+
+	return 0;
 }
 
 static int8_t intr_next(struct token *tstr)
 {
+	struct variable *var;
+	struct for_elem *f = for_stack, *prev = NULL;
+	int err;
+	real acc;
 
+	tstr = tstr->next;
+	if (tstr->type != token_var) {
+		return -EINVAL;
+	}
+
+	err = intr_getVar(&var, tstr->value, 0);
+	if (err < 0) {
+		return err;
+	}
+
+	if (tstr->next != NULL) {
+		return -EINVAL;
+	}
+
+	while (f != NULL) {
+		if (f->iter == var) {
+			err = real_add(&acc, &f->iter->val, &f->step);
+			if (err < 0) {
+				return err;
+			}
+			memcpy(&f->iter->val, &acc, sizeof(real));
+
+			err = real_sub(&acc, &f->limit, &f->iter->val);
+			if (acc.s > 0) {
+				line_next = f->line;
+				if (prev != NULL) {
+					prev->next = f->next;
+				}
+				else {
+					for_stack = f->next;
+				}
+				ufree(f);
+			}
+			return 0;
+		}
+		prev = f;
+		f = f->next;
+	}
+
+	return -EINVAL;
 }
 
 static int8_t intr_goto(struct token *tstr)
@@ -325,7 +445,11 @@ void intr_clean(int8_t hard)
 		ufree(victim);
 	}
 
-	/* TODO for stack*/
+	while (for_stack != NULL) {
+		struct for_elem *victim = for_stack;
+		for_stack = victim->next;
+		ufree(victim);
+	}
 
 	if (hard) {
 		while (variables != NULL) {

@@ -21,6 +21,7 @@ typedef struct {
 } real;
 
 extern const real rzero;
+extern const real rone;
 
 int8_t real_isZero(const real *r);
 
