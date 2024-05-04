@@ -363,11 +363,41 @@ int8_t real_mul(real *o, const real *a, const real *b)
 	return 0;
 }
 
+/* FIXME: 0.02 / 0.01 = 2.00000001 */
 int8_t real_div(real *o, const real *a, const real *b)
 {
-	/* TODO */
-	(void)o;
-	(void)a;
-	(void)b;
-	return -1;
+	real t, acc, d;
+	int8_t i;
+	int16_t e = a->e - b->e;
+
+	if ((e < INT8_MIN) || (e > INT8_MAX) || real_isZero(b)) {
+		return -1;
+	}
+
+	memcpy(&t, a, sizeof(t));
+	memcpy(&d, b, sizeof(t));
+	memset(o->m, 0, sizeof(o->m));
+	memcpy(&acc, &rzero, sizeof(acc));
+
+	t.s = 1;
+	d.s = 1;
+	acc.s = 1;
+	d.e = a->e;
+
+	for (i = PRECISION - 1; i > 0; --i) {
+		while (1) {
+			real_sub(&acc, &t, &d);
+			if (acc.s != t.s) {
+				break;
+			}
+			o->m[i >> 1] += (i & 1) ? 0x10 : 1;
+			memcpy(&t, &acc, sizeof(t));
+		}
+		++t.e;
+	}
+
+	o->e = e;
+	o->s = (a->s == b->s) ? 1 : -1;
+
+	return 0;
 }
