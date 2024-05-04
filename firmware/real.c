@@ -363,7 +363,6 @@ int8_t real_mul(real *o, const real *a, const real *b)
 	return 0;
 }
 
-/* FIXME: 0.02 / 0.01 = 2.00000001 */
 int8_t real_div(real *o, const real *a, const real *b)
 {
 	real t, acc, d;
@@ -380,9 +379,9 @@ int8_t real_div(real *o, const real *a, const real *b)
 	memcpy(&acc, &rzero, sizeof(acc));
 
 	t.s = 1;
+	t.e = 0;
 	d.s = 1;
-	acc.s = 1;
-	d.e = a->e;
+	d.e = 0;
 
 	for (i = PRECISION - 1; i > 0; --i) {
 		while (1) {
@@ -398,6 +397,8 @@ int8_t real_div(real *o, const real *a, const real *b)
 
 	o->e = e;
 	o->s = (a->s == b->s) ? 1 : -1;
+
+	real_normalize(o);
 
 	return 0;
 }
