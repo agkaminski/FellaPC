@@ -141,6 +141,9 @@ int8_t cmd_parse(const char *cmd)
 
 	if (isdigit(cmd[0])) {
 		err = cmdd_addLine(cmd);
+		if (err >= 0) {
+			err = 1; /* Supress prompt */
+		}
 	}
 	else if (strcasecmp(cmd, "list") == 0) {
 		cmd_list();

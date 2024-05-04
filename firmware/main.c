@@ -15,16 +15,19 @@
 #include "real.h"
 
 static uint8_t heap[30 * 1024];
+static const char prompt[] = "Ready.\n";
 
 int main(void)
 {
 	int8_t err;
-	char buff[16] = "Error ";
+	char buff[16] = "error ";
 
 	vga_selectRom(0);
 	vga_clear();
 
 	ualloc_init(heap, sizeof(heap));
+
+	vga_puts(prompt);
 
 	while (1) {
 		char cmd[VGA_COLS + 1];
@@ -35,6 +38,10 @@ int main(void)
 				itoa(-err, buff + 6, 10);
 				vga_puts(buff);
 				vga_putc('\n');
+			}
+			else if (err == 0) {
+				vga_putc('\n');
+				vga_puts(prompt);
 			}
 		}
 	}

@@ -524,8 +524,6 @@ int8_t intr_run(struct line *start)
 	struct line *curr = start;
 	int8_t err = 0;
 
-	intr_clean(0);
-
 	while (curr != NULL) {
 		if (keyboard_scan() >= 0) {
 			if (keyboard_keys.keys[0] == KEY_ESC) {
@@ -551,6 +549,16 @@ int8_t intr_run(struct line *start)
 		else {
 			curr = curr->next;
 		}
+	}
+
+	intr_clean(0);
+
+	if (err < 0) {
+		char buff[8];
+		vga_puts("Line ");
+		itoa(line_curr, buff, 10);
+		vga_puts(buff);
+		vga_puts(": ");
 	}
 
 	return err;
