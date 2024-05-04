@@ -26,7 +26,7 @@ do { \
 #define LOW(x) ((x) & 0xf)
 #define HIGH(x) ((x) >> 4)
 
-static int8_t real_isZero(const real *r)
+int8_t real_isZero(const real *r)
 {
 	uint8_t i;
 

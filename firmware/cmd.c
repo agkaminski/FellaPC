@@ -140,7 +140,7 @@ static int8_t cmdd_addLine(const char *cmd)
 int8_t cmd_parse(const char *cmd)
 {
 	int8_t err = 0;
-	struct token *tstr, *curr;
+	struct token *tstr;
 
 	if (isdigit(cmd[0])) {
 		err = cmdd_addLine(cmd);

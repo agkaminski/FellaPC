@@ -8,12 +8,22 @@
 #include <stddef.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <stdint.h>
 
+#include "ualloc/ualloc.h"
 #include "interpreter.h"
 #include "vga.h"
 #include "real.h"
 
-static uint16_t next_line;
+static uint16_t line_curr;
+static uint16_t line_next;
+
+struct gosub_elem {
+	struct gosub_elem *prev;
+	uint16_t line;
+};
+
+struct gosub_elem *gosub_stack = NULL;
 
 static int8_t intr_collapseExp(real *o, struct token *tstr, struct token **end)
 {
@@ -22,20 +32,22 @@ static int8_t intr_collapseExp(real *o, struct token *tstr, struct token **end)
 	return 0;
 }
 
-static int8_t intr_jump(const char *number)
+static int8_t intr_isInteger(struct token *token)
 {
 	uint8_t pos = 0;
 
-	while (number[pos] != '\0') {
-		if (!isdigit(number[pos])) {
-			return -EINVAL;
+	if ((token == NULL) || (token->type != token_real) || (token->value == NULL)) {
+		return 0;
+	}
+
+	while (token->value[pos] != '\0') {
+		if (!isdigit(token->value[pos])) {
+			return 0;
 		}
 		++pos;
 	}
 
-	next_line = atoi(number);
-
-	return 0;
+	return 1;
 }
 
 static int8_t intr_var(struct token *tstr)
@@ -113,11 +125,11 @@ static int8_t intr_next(struct token *tstr)
 
 static int8_t intr_goto(struct token *tstr)
 {
-	if ((tstr->type == token_real) || (tstr->next != NULL)) {
-		return intr_jump(tstr->value);
+	if (!intr_isInteger(tstr) || (tstr->next != NULL)) {
+		return -EINVAL;
 	}
 
-	return -EINVAL;
+	line_next = atoi(tstr->value);
 }
 
 static int8_t intr_if(struct token *tstr)
@@ -136,12 +148,13 @@ static int8_t intr_if(struct token *tstr)
 		return -EINVAL;
 	}
 	tstr = tstr->next;
-	if ((tstr == NULL) || (tstr->type != token_real)) {
+	if (!intr_isInteger(tstr)) {
 		return -EINVAL;
 	}
 
 	if (condition) {
-		return intr_jump(tstr->value);
+		line_next = atoi(tstr->value);
+		return 0;
 	}
 
 	if (tstr == NULL) {
@@ -152,11 +165,12 @@ static int8_t intr_if(struct token *tstr)
 		return -1;
 	}
 	tstr = tstr->next;
-	if ((tstr == NULL) || (tstr->type != token_real) || (tstr->next != NULL)) {
+	if (!intr_isInteger(tstr) || (tstr->next != NULL)) {
 		return -EINVAL;
 	}
 
-	return intr_jump(tstr->value);
+	line_next = atoi(tstr->value);
+	return 0;
 }
 
 static int8_t intr_dim(struct token *tstr)
@@ -166,12 +180,40 @@ static int8_t intr_dim(struct token *tstr)
 
 static int8_t intr_gosub(struct token *tstr)
 {
+	struct gosub_elem *new;
 
+	if (!intr_isInteger(tstr) || (tstr->next != NULL)) {
+		return -EINVAL;
+	}
+
+	new = umalloc(sizeof(*new));
+	if (new == NULL) {
+		return -ENOMEM;
+	}
+
+	new->line = line_curr;
+	new->prev = NULL;
+	if (gosub_stack != NULL) {
+		new->prev = gosub_stack;
+	}
+
+	gosub_stack = new;
+
+	line_next = atoi(tstr->value);
+	return 0;
 }
 
 static int8_t intr_return(struct token *tstr)
 {
+	struct gosub_elem *elem = gosub_stack;
 
+	if ((tstr->next != NULL) || (elem == NULL)) {
+		return -EINVAL;
+	}
+
+	line_next = elem->line;
+	gosub_stack = elem->prev;
+	ufree(elem);
 }
 
 static int8_t intr_clear(struct token *tstr)

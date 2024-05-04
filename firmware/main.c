@@ -12,29 +12,9 @@
 #include "tty.h"
 #include "ualloc/ualloc.h"
 #include "cmd.h"
+#include "real.h"
 
 static uint8_t heap[30 * 1024];
-
-#if 0
-void dump(uint16_t addr, uint16_t len)
-{
-	uint16_t i, j;
-	char buff[8];
-	volatile uint8_t *ptr = (void *)addr;
-
-	for (i = 0; i < len; i += 16) {
-		sprintf(buff, "%04X: ", addr + i);
-		vga_puts(buff);
-
-		for (j = 0; j < 16 && i + j < len; ++j) {
-			sprintf(buff, "%02X ", ptr[i + j]);
-			vga_puts(buff);
-		}
-
-		if (i + j < len) vga_putc('\n');
-	}
-}
-#endif
 
 int main(void)
 {
