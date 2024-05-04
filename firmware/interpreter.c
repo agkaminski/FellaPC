@@ -318,7 +318,8 @@ static int8_t intr_next(struct token *tstr)
 			if (acc.s > 0) {
 				jump.line = f->line;
 				jump.jump = 1;
-
+			}
+			else {
 				if (prev != NULL) {
 					prev->next = f->next;
 				}
