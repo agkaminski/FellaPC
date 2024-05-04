@@ -5,9 +5,16 @@
  */
 
 #include <errno.h>
+#include <stddef.h>
 
 #include "interpreter.h"
 #include "vga.h"
+#include "real.h"
+
+static int8_t intr_collapseExp(real *o, struct token *tstr)
+{
+
+}
 
 static int8_t intr_var(struct token *tstr)
 {
@@ -16,7 +23,50 @@ static int8_t intr_var(struct token *tstr)
 
 static int8_t intr_print(struct token *tstr)
 {
+	int8_t first = 1, err;
+	char buff[20];
+	real r;
 
+	while (1) {
+		switch (tstr->type) {
+			case token_str:
+				vga_puts(tstr->value);
+				break;
+
+			case token_real:
+			case token_var:
+				err = intr_collapseExp(&r, tstr);
+				real_rtoa(buff, &r);
+				vga_puts(buff);
+				break;
+
+			default:
+				if (!first) {
+					switch (tstr->type) {
+						case token_coma:
+							vga_putc('\t');
+							break;
+
+						case token_semicol:
+							vga_putc(' ');
+							break;
+
+						default:
+							return -EINVAL;
+					}
+					break;
+				}
+				return -EINVAL;
+		}
+
+		first = 0;
+
+		if (tstr->next == NULL) {
+			vga_putc('\n');
+			return 0;
+		}
+		tstr = tstr->next;
+	}
 }
 
 static int8_t intr_input(struct token *tstr)
