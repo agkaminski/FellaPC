@@ -233,6 +233,14 @@ static int8_t intr_for(struct token *tstr)
 		return err;
 	}
 
+	f = for_stack;
+	while (f != NULL) {
+		if (f->iter == iter) {
+			return -EINVAL;
+		}
+		f = f->next;
+	}
+
 	tstr = tstr->next;
 	if (tstr->type != token_eq) {
 		return -EINVAL;
