@@ -14,7 +14,7 @@
 #include "cmd.h"
 #include "real.h"
 
-static uint8_t heap[30 * 1024];
+static uint8_t heap[28 * 1024];
 static const char prompt[] = "Ready.\n";
 
 int main(void)
