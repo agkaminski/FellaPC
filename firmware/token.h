@@ -9,7 +9,7 @@
 
 enum token_type {
 	/* Data */
-	token_var,
+	token_var = 0,
 	token_real,
 
 	/* Operators */
@@ -31,6 +31,7 @@ enum token_type {
 	token_input,
 	token_for,
 	token_to,
+	token_step,
 	token_next,
 	token_goto,
 	token_if,
@@ -69,6 +70,8 @@ struct token {
 	char *value;
 };
 
-struct token *token_tokenize(const char *line);
+void token_free(struct token *first);
+
+int8_t token_tokenize(struct token **tstr, const char *line);
 
 #endif

@@ -13,6 +13,7 @@
 
 #include "ualloc/ualloc.h"
 #include "vga.h"
+#include "token.h"
 
 struct line {
 	uint16_t number;
@@ -149,10 +150,19 @@ int8_t cmd_parse(const char *cmd)
 		cmd_new();
 	}
 	else if (*cmd != '\0') {
-		/* Debug */
-		vga_puts("CMD: ");
-		vga_puts(cmd);
-		vga_putc('\n');
+		err = token_tokenize(&tstr, cmd);
+		if (err >= 0) {
+			for (curr = tstr; curr != NULL; curr = curr->next) {
+				char buff[10];
+				itoa(curr->type, buff, 10);
+				vga_puts(buff);
+				vga_putc(' ');
+				if (curr->value != NULL) vga_puts(curr->value);
+				vga_putc('\n');
+			}
+
+			token_free(tstr);
+		}
 	}
 
 	return err;

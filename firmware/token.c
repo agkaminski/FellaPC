@@ -7,23 +7,12 @@
 #include <stdint.h>
 #include <ctype.h>
 #include <string.h>
+#include <errno.h>
 
 #include "token.h"
 #include "ualloc/ualloc.h"
 
-static void token_free(struct token *first)
-{
-	struct token *victim;
-
-	while (first != NULL) {
-		victim = first;
-		first = first->next;
-		ufree(victim->value);
-		ufree(victim);
-	}
-}
-
-static struct {
+static const struct {
 	const char *str;
 	enum token_type type;
 } tokstr[] = {
@@ -31,6 +20,7 @@ static struct {
 	{ "input", token_input },
 	{ "for", token_for },
 	{ "to", token_to },
+	{ "step", token_step },
 	{ "next", token_next },
 	{ "goto", token_goto },
 	{ "if", token_if },
@@ -61,7 +51,19 @@ static struct {
 	{ "asc", token_asc }
 };
 
-struct token *token_tokenize(const char *line)
+void token_free(struct token *first)
+{
+	struct token *victim;
+
+	while (first != NULL) {
+		victim = first;
+		first = first->next;
+		ufree(victim->value);
+		ufree(victim);
+	}
+}
+
+int8_t token_tokenize(struct token **tstr, const char *line)
 {
 	uint8_t pos = 0, start, isreal;
 	struct token *first = NULL, *prev, *curr;
@@ -70,7 +72,7 @@ struct token *token_tokenize(const char *line)
 		curr = umalloc(sizeof(*curr));
 		if (curr == NULL) {
 			token_free(first);
-			return NULL;
+			return -ENOMEM;
 		}
 		curr->value = NULL;
 		curr->next = NULL;
@@ -81,16 +83,14 @@ struct token *token_tokenize(const char *line)
 
 		start = pos;
 
-		if (isdigit(line[pos])) {
-			isreal = 1;
-		}
+		isreal = isdigit(line[pos]);
 
 		/* Cut the token */
 
 		while (isalnum(line[pos]) || (line[pos] == '$')) {
 			if (isreal && !isdigit(line[pos])) {
 				token_free(first);
-				return NULL;
+				return -EINVAL;
 			}
 
 			++pos;
@@ -102,7 +102,7 @@ struct token *token_tokenize(const char *line)
 			curr->value = umalloc(pos - start + 1);
 			if (curr->value == NULL) {
 				token_free(first);
-				return NULL;
+				return -ENOMEM;
 			}
 			memcpy(curr->value, line + start, pos - start);
 			curr->value[pos - start] = '\0';
@@ -113,8 +113,8 @@ struct token *token_tokenize(const char *line)
 			else {
 				uint8_t i, found = 0;
 				for (i = 0; i < sizeof(tokstr) / sizeof(*tokstr); ++i) {
-					if (strcasecmp(tokstr->str, curr->value) == 0) {
-						curr->type = tokstr->type;
+					if (strcasecmp(tokstr[i].str, curr->value) == 0) {
+						curr->type = tokstr[i].type;
 						found = 1;
 						break;
 					}
@@ -181,7 +181,7 @@ struct token *token_tokenize(const char *line)
 
 				default:
 					token_free(first);
-					return NULL;
+					return -EINVAL;
 			}
 			++pos;
 		}
@@ -195,5 +195,7 @@ struct token *token_tokenize(const char *line)
 		prev = curr;
 	}
 
-	return first;
+	*tstr = first;
+
+	return 0;
 }
