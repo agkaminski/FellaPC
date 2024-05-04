@@ -85,7 +85,7 @@ static int8_t intr_collapseExp(real *o, struct token *tstr, struct token **end)
 		memcpy(o, &var->val, sizeof(*o));
 	}
 	else if (tstr->type == token_real) {
-		err = real_ator(tstr->value, o);
+		err = (real_ator(tstr->value, o) == NULL) ? -ERANGE : 0;
 	}
 
 	*end = tstr->next;
@@ -158,7 +158,7 @@ static int8_t intr_print(struct token *tstr)
 			case token_var:
 				err = intr_collapseExp(&r, tstr, &next);
 				if (err < 0) {
-					return -EINVAL;
+					return err;
 				}
 				real_rtoa(buff, &r);
 				vga_puts(buff);
@@ -315,6 +315,26 @@ static int8_t intr_clear(struct token *tstr)
 	vga_clear();
 
 	return 0;
+}
+
+void intr_clean(int8_t hard)
+{
+	while (gosub_stack != NULL) {
+		struct gosub_elem *victim = gosub_stack;
+		gosub_stack = victim->prev;
+		ufree(victim);
+	}
+
+	/* TODO for stack*/
+
+	if (hard) {
+		while (variables != NULL) {
+			struct variable *victim = variables;
+			variables = victim->next;
+			ufree(victim->name);
+			ufree(victim);
+		}
+	}
 }
 
 int8_t interpreter(struct token *tstr)

@@ -10,6 +10,8 @@
 #include <stdint.h>
 #include "token.h"
 
+void intr_clean(int8_t hard);
+
 int8_t interpreter(struct token *tstr);
 
 #endif

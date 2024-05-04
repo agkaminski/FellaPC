@@ -51,6 +51,8 @@ static void cmd_new(void)
 	}
 
 	line_head = NULL;
+
+	intr_clean(1);
 }
 
 static int8_t cmdd_addLine(const char *cmd)
