@@ -19,6 +19,11 @@
 static uint16_t line_curr;
 static uint16_t line_next;
 
+static struct {
+	uint16_t line;
+	int8_t jump;
+} jump;
+
 struct gosub_elem {
 	struct gosub_elem *prev;
 	uint16_t line;
@@ -311,7 +316,9 @@ static int8_t intr_next(struct token *tstr)
 
 			err = real_sub(&acc, &f->limit, &f->iter->val);
 			if (acc.s > 0) {
-				line_next = f->line;
+				jump.line = f->line;
+				jump.jump = 1;
+
 				if (prev != NULL) {
 					prev->next = f->next;
 				}
@@ -337,7 +344,8 @@ static int8_t intr_goto(struct token *tstr)
 		return -EINVAL;
 	}
 
-	line_next = atoi(tstr->value);
+	jump.line = atoi(tstr->value);
+	jump.jump = 1;
 }
 
 static int8_t intr_if(struct token *tstr)
@@ -363,7 +371,8 @@ static int8_t intr_if(struct token *tstr)
 	}
 
 	if (condition) {
-		line_next = atoi(tstr->value);
+		jump.line = atoi(tstr->value);
+		jump.jump = 1;
 		return 0;
 	}
 
@@ -379,7 +388,9 @@ static int8_t intr_if(struct token *tstr)
 		return -EINVAL;
 	}
 
-	line_next = atoi(tstr->value);
+	jump.line = atoi(tstr->value);
+	jump.jump = 1;
+
 	return 0;
 }
 
@@ -409,7 +420,9 @@ static int8_t intr_gosub(struct token *tstr)
 	new->prev = gosub_stack;
 	gosub_stack = new;
 
-	line_next = atoi(tstr->value);
+	jump.line = atoi(tstr->value);
+	jump.jump = 1;
+
 	return 0;
 }
 
@@ -421,7 +434,9 @@ static int8_t intr_return(struct token *tstr)
 		return -EINVAL;
 	}
 
-	line_next = elem->line;
+	jump.line = elem->line;
+	jump.jump = 1;
+
 	gosub_stack = elem->prev;
 	ufree(elem);
 }
@@ -450,6 +465,8 @@ void intr_clean(int8_t hard)
 		for_stack = victim->next;
 		ufree(victim);
 	}
+
+	jump.jump = 0;
 
 	if (hard) {
 		while (variables != NULL) {
@@ -494,5 +511,32 @@ int8_t intr_line(const char *line)
 
 int8_t intr_run(struct line *start)
 {
+	struct line *curr = start;
+	int8_t err = 0;
+	uint16_t next;
 
+	intr_clean(0);
+
+	while (curr != NULL) {
+		line_curr = curr->number;
+		line_next = (curr->next != NULL) ? curr->next->number : 0xffffu;
+
+		err = intr_line(curr->data);
+		if (err < 0) {
+			break;
+		}
+
+		if (jump.jump) {
+			jump.jump = 0;
+			curr = start;
+			while ((curr != NULL) && (curr->number != jump.line)) {
+				curr = curr->next;
+			}
+		}
+		else {
+			curr = curr->next;
+		}
+	}
+
+	return err;
 }
