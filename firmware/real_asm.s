@@ -161,8 +161,8 @@
 @loop:			LDA (ptr2), Y
 				CMP (ptr1), Y
 
-				BCS @more
-				BNE @less
+				BCC @less
+				BNE @more
 
 				DEY
 				BPL @loop
