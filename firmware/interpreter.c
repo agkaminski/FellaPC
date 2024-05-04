@@ -6,10 +6,14 @@
 
 #include <errno.h>
 #include <stddef.h>
+#include <ctype.h>
+#include <stdlib.h>
 
 #include "interpreter.h"
 #include "vga.h"
 #include "real.h"
+
+static uint16_t next_line;
 
 static int8_t intr_collapseExp(real *o, struct token *tstr, struct token **end)
 {
@@ -20,7 +24,17 @@ static int8_t intr_collapseExp(real *o, struct token *tstr, struct token **end)
 
 static int8_t intr_jump(const char *number)
 {
-	/* TODO */
+	uint8_t pos = 0;
+
+	while (number[pos] != '\0') {
+		if (!isdigit(number[pos])) {
+			return -EINVAL;
+		}
+		++pos;
+	}
+
+	next_line = atoi(number);
+
 	return 0;
 }
 
@@ -99,7 +113,11 @@ static int8_t intr_next(struct token *tstr)
 
 static int8_t intr_goto(struct token *tstr)
 {
+	if ((tstr->type == token_real) || (tstr->next != NULL)) {
+		return intr_jump(tstr->value);
+	}
 
+	return -EINVAL;
 }
 
 static int8_t intr_if(struct token *tstr)
@@ -134,7 +152,7 @@ static int8_t intr_if(struct token *tstr)
 		return -1;
 	}
 	tstr = tstr->next;
-	if ((tstr == NULL) || (tstr->type != token_real)) {
+	if ((tstr == NULL) || (tstr->type != token_real) || (tstr->next != NULL)) {
 		return -EINVAL;
 	}
 
@@ -158,7 +176,13 @@ static int8_t intr_return(struct token *tstr)
 
 static int8_t intr_clear(struct token *tstr)
 {
+	if (tstr->next != NULL) {
+		return -EINVAL;
+	}
 
+	vga_clear();
+
+	return 0;
 }
 
 int8_t interpreter(struct token *tstr)
