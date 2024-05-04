@@ -14,6 +14,7 @@
 #include "ualloc/ualloc.h"
 #include "vga.h"
 #include "token.h"
+#include "interpreter.h"
 
 struct line {
 	uint16_t number;
@@ -139,6 +140,7 @@ static int8_t cmdd_addLine(const char *cmd)
 int8_t cmd_parse(const char *cmd)
 {
 	int8_t err = 0;
+	struct token *tstr, *curr;
 
 	if (isdigit(cmd[0])) {
 		err = cmdd_addLine(cmd);
@@ -152,15 +154,7 @@ int8_t cmd_parse(const char *cmd)
 	else if (*cmd != '\0') {
 		err = token_tokenize(&tstr, cmd);
 		if (err >= 0) {
-			for (curr = tstr; curr != NULL; curr = curr->next) {
-				char buff[10];
-				itoa(curr->type, buff, 10);
-				vga_puts(buff);
-				vga_putc(' ');
-				if (curr->value != NULL) vga_puts(curr->value);
-				vga_putc('\n');
-			}
-
+			err = interpreter(tstr);
 			token_free(tstr);
 		}
 	}
