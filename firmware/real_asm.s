@@ -34,7 +34,6 @@
 				DEY
 				INC sp
 				INC sp
-				SED
 				RTS
 
 .endproc
@@ -43,6 +42,7 @@
 
 				JSR _real_2ptrPrologue
 
+				SED
 				CLC
 				PHP
 
@@ -69,6 +69,7 @@
 
 				JSR _real_2ptrPrologue
 
+				SED
 				SEC
 				PHP
 
@@ -219,3 +220,4 @@
 @end:			RTS
 
 .endproc
+
