@@ -37,22 +37,6 @@ enum token_type {
 	token_then,
 	token_else,
 
-	/* Operators */
-	token_plus,
-	token_minus,
-	token_mul,
-	token_div,
-	token_mod,
-	token_lbrace,
-	token_rbrace,
-	token_eq,
-	token_lt,
-	token_lteq,
-	token_gt,
-	token_gteq,
-	token_semicol,
-	token_coma,
-
 	/* Functions */
 	token_abs,
 	token_and,
@@ -73,7 +57,23 @@ enum token_type {
 	token_mid,
 	token_left,
 	token_right,
-	token_asc
+	token_asc,
+
+	/* Operators */
+	token_plus = '+',
+	token_minus = '-',
+	token_mul = '*',
+	token_div = '\\',
+	token_mod = '%',
+	token_lbrace = '(',
+	token_rbrace = ')',
+	token_eq = '=',
+	token_lt = '<',
+	token_gt = '>',
+	token_semicol = ';',
+	token_coma = ',',
+	token_lteq = token_lt + 10,
+	token_gteq = token_gt + 10,
 };
 
 struct token {

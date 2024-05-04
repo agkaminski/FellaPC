@@ -147,66 +147,12 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 			}
 		}
 		else {
-			switch (line[pos]) {
-				case '+':
-					curr->type = token_plus;
-					break;
-
-				case '-':
-					curr->type = token_minus;
-					break;
-
-				case '*':
-					curr->type = token_mul;
-					break;
-
-				case '/':
-					curr->type = token_div;
-					break;
-
-				case '%':
-					curr->type = token_mod;
-					break;
-
-				case '(':
-					curr->type = token_lbrace;
-					break;
-
-				case ')':
-					curr->type = token_rbrace;
-					break;
-
-				case '=':
-					curr->type = token_eq;
-					break;
-
-				case '<':
-					curr->type = token_lt;
-					if (line[pos + 1] == '=') {
-						curr->type = token_lteq;
-						++pos;
-					}
-					break;
-
-				case '>':
-					curr->type = token_gt;
-					if (line[pos + 1] == '=') {
-						curr->type = token_gteq;
-						++pos;
-					}
-					break;
-
-				case ';':
-					curr->type = token_semicol;
-					break;
-
-				case ',':
-					curr->type = token_coma;
-					break;
-
-				default:
-					token_free(first);
-					return -EINVAL;
+			/* Operators. Just convert to token and hope for the best.
+			 * Invalid token should be get by the interpreter, so
+			 * theoretically it's 100% ok */
+			curr->type = (enum token_type)line[pos];
+			if (((curr->type == token_lt) || (curr->type == token_gt)) && (line[pos + 1] == '=')) {
+				curr->type += 10;
 			}
 			++pos;
 		}
