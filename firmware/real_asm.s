@@ -7,6 +7,7 @@
 .export			_real_shiftLeft
 .export			_real_shiftRight
 .export			_real_cmp
+.export			_real_normalize
 
 .importzp		sp, ptr1, ptr2, tmp1, tmp2
 
@@ -171,5 +172,50 @@
 				RTS
 @more:			LDA #1
 				RTS
+
+.endproc
+
+.proc			_real_normalize: near
+
+				JSR _real_isZero
+
+				; pointer moved to ptr1 by _real_isZero
+
+				CMP #0
+				BNE @iszero
+
+@loop:			; check if MSB is non-zero
+
+				LDY #4
+				LDA (ptr1), Y
+				AND #$F0
+				BNE @end
+
+				; decrease exponent only if e >= INT8_MIN
+
+				LDY #5
+				LDA (ptr1), Y
+				CMP #$F0
+				BEQ @end
+				TAX
+				DEX
+				TXA
+				STA (ptr1), Y
+
+				LDA ptr1
+				LDX ptr1 + 1
+				JSR _real_shiftLeft
+				JMP @loop
+
+@iszero:		; fix zero number (set exponent and sign to default)
+
+				LDA #0
+				LDY #5
+				STA (ptr1), Y
+				LDA #1
+				INY
+				STA (ptr1), Y
+
+@end:			RTS
 
 .endproc

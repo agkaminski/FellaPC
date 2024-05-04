@@ -31,24 +31,6 @@ void real_shiftLeft(real *r);
 void real_shiftRight(real *r);
 int8_t real_cmp(const real *a, const real *b);
 
-void real_normalize(real *r)
-{
-	if (real_isZero(r)) {
-		r->e = 0;
-		r->s = 1;
-		return;
-	}
-
-	while ((r->m[(PRECISION / 2) - 1] & 0xf0) == 0) {
-		if (r->e == INT8_MIN) {
-			break;
-		}
-
-		real_shiftLeft(r);
-		--r->e;
-	}
-}
-
 void real_rtoa(char *buff, const real *r)
 {
 	uint8_t i, pos = 0, sign = 0, dot = 1;
