@@ -65,10 +65,40 @@ void token_free(struct token *first)
 
 int8_t token_tokenize(struct token **tstr, const char *line)
 {
-	uint8_t pos = 0, start, isreal;
+	uint8_t pos = 0, start, isreal, isstr;
 	struct token *first = NULL, *prev, *curr;
 
 	while (line[pos] != '\0') {
+		while ((line[pos] == ' ') || (line[pos] == '\t')) {
+			++pos;
+		}
+
+		isreal = isdigit(line[pos]);
+
+		if (line[pos] == '\"') {
+			isstr = 1;
+			++pos;
+		}
+		else {
+			isstr = 0;
+		}
+
+		start = pos;
+
+		/* Cut the token */
+
+		while (isalnum(line[pos]) || (line[pos] == '$')) {
+			if (isreal && !isdigit(line[pos])) {
+				return -EINVAL;
+			}
+
+			++pos;
+		}
+
+		if (isstr && (line[pos] != '\"')) {
+			return -EINVAL;
+		}
+
 		curr = umalloc(sizeof(*curr));
 		if (curr == NULL) {
 			token_free(first);
@@ -76,25 +106,6 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 		}
 		curr->value = NULL;
 		curr->next = NULL;
-
-		while ((line[pos] == ' ') || (line[pos] == '\t')) {
-			++pos;
-		}
-
-		start = pos;
-
-		isreal = isdigit(line[pos]);
-
-		/* Cut the token */
-
-		while (isalnum(line[pos]) || (line[pos] == '$')) {
-			if (isreal && !isdigit(line[pos])) {
-				token_free(first);
-				return -EINVAL;
-			}
-
-			++pos;
-		}
 
 		if (start != pos) {
 			uint8_t tpos = 0;
@@ -109,6 +120,10 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 
 			if (isreal) {
 				curr->type = token_real;
+			}
+			else if (isstr) {
+				curr->type = token_str;
+				++pos; /* Eat closing " */
 			}
 			else {
 				uint8_t i, found = 0;
@@ -177,6 +192,14 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 						curr->type = token_gteq;
 						++pos;
 					}
+					break;
+
+				case ';':
+					curr->type = token_semicol;
+					break;
+
+				case ',':
+					curr->type = token_coma;
 					break;
 
 				default:

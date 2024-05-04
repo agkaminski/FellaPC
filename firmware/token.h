@@ -8,9 +8,33 @@
 #define TOKEN_H_
 
 enum token_type {
+	/* Beginning tokens */
+
 	/* Data */
 	token_var = 0,
+
+	/* Keywords */
+	token_print,
+	token_input,
+	token_for,
+	token_next,
+	token_goto,
+	token_if,
+	token_dim,
+	token_gosub,
+	token_return,
+	token_clear,
+
+	/* Following tokens */
+
+	/* Data */
 	token_real,
+	token_str,
+
+	/* Keywords */
+	token_to,
+	token_step,
+	token_then,
 
 	/* Operators */
 	token_plus,
@@ -25,21 +49,8 @@ enum token_type {
 	token_lteq,
 	token_gt,
 	token_gteq,
-
-	/* Keywords */
-	token_print,
-	token_input,
-	token_for,
-	token_to,
-	token_step,
-	token_next,
-	token_goto,
-	token_if,
-	token_then,
-	token_dim,
-	token_gosub,
-	token_return,
-	token_clear,
+	token_semicol,
+	token_coma,
 
 	/* Functions */
 	token_abs,
