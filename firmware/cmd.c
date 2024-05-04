@@ -107,7 +107,7 @@ static int8_t cmdd_addLine(const char *cmd)
 				}
 				ufree(curr);
 			}
-			break;
+			return 0;
 		}
 
 		if (curr->number > line->number) {
