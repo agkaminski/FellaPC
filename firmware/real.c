@@ -27,62 +27,9 @@ do { \
 #define LOW(x) ((x) & 0xf)
 #define HIGH(x) ((x) >> 4)
 
-int8_t real_isZero(const real *r)
-{
-	uint8_t i;
-
-	for (i = 0; i < sizeof(r->m); ++i) {
-		if (r->m[i] != 0) {
-			return 0;
-		}
-	}
-
-	return 1;
-}
-
-static void real_shiftLeft(real *r)
-{
-	uint8_t i;
-	uint8_t rem = 0, t;
-
-	for (i = 0; i < sizeof(r->m); ++i) {
-		t = (r->m[i] << 4) | rem;
-		rem = r->m[i] >> 4;
-		r->m[i] = t;
-	}
-}
-
-static void real_shiftRight(real *r)
-{
-	int8_t i;
-	uint8_t rem = 0, t;
-
-	for (i = sizeof(r->m) - 1; i >= 0; --i) {
-		t = (r->m[i] >> 4) | (rem << 4);
-		rem = r->m[i] & 0xf;
-		r->m[i] = t;
-	}
-}
-
-static int8_t real_cmp(const real *a, const real *b)
-{
-	int8_t i;
-
-	for (i = sizeof(a->m) - 1; i >= 0 ; --i) {
-		if (a->m[i] == b->m[i]) {
-			continue;
-		}
-
-		if (a->m[i] > b->m[i]) {
-			return 1;
-		}
-		else {
-			return -1;
-		}
-	}
-
-	return 0;
-}
+void real_shiftLeft(real *r);
+void real_shiftRight(real *r);
+int8_t real_cmp(const real *a, const real *b);
 
 void real_normalize(real *r)
 {
