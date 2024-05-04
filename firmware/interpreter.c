@@ -544,7 +544,7 @@ int8_t intr_line(const char *line)
 {
 	int8_t err;
 	struct token *tstr;
-	int8_t (*const entry[])(struct token *) = {
+	static int8_t (*const entry[])(struct token *) = {
 		intr_var,
 		intr_print,
 		intr_input,
