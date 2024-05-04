@@ -15,6 +15,7 @@
 #include "interpreter.h"
 #include "vga.h"
 #include "real.h"
+#include "keyboard.h"
 
 static uint16_t line_curr;
 static uint16_t line_next;
@@ -522,11 +523,16 @@ int8_t intr_run(struct line *start)
 {
 	struct line *curr = start;
 	int8_t err = 0;
-	uint16_t next;
 
 	intr_clean(0);
 
 	while (curr != NULL) {
+		if (keyboard_scan() >= 0) {
+			if (keyboard_keys.keys[0] == KEY_ESC) {
+				break;
+			}
+		}
+
 		line_curr = curr->number;
 		line_next = (curr->next != NULL) ? curr->next->number : 0xffffu;
 
