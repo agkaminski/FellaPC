@@ -36,16 +36,13 @@ static void cmd_list(void)
 
 static void cmd_new(void)
 {
-	struct line *curr = line_head, *next;
+	struct line *curr;
 
-	while (curr != NULL) {
-		next = curr->next;
-		ufree(curr->data);
+	while (line_head != NULL) {
+		curr = line_head;
+		line_head = curr->next;
 		ufree(curr);
-		curr = next;
 	}
-
-	line_head = NULL;
 
 	intr_clean(1);
 }
