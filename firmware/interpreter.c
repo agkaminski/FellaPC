@@ -262,10 +262,7 @@ static int8_t intr_input(struct token *tstr)
 
 	/* TODO add strings */
 
-	err = real_ator(cmd, &var->val);
-	if (err < 0) {
-		return err;
-	}
+	real_ator(cmd, &var->val);
 
 	return 0;
 }
