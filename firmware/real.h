@@ -20,6 +20,8 @@ typedef struct {
 	int8_t s;
 } real;
 
+extern const real rzero;
+
 int8_t real_isZero(const real *r);
 
 void real_normalize(real *r);

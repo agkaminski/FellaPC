@@ -13,7 +13,7 @@
 extern uint8_t _real_bcdAdd(uint8_t *a, uint8_t *b);
 extern void _real_bcdSub(uint8_t *a, uint8_t *b);
 
-static const real rzero = { { 0, 0, 0, 0, 0 }, 0, 1 };
+const real rzero = { { 0, 0, 0, 0, 0 }, 0, 1 };
 
 /* Macro is cheaper than function, what a crazy compiler it is */
 #define SWAP(a, b) \

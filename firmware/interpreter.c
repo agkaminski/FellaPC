@@ -9,6 +9,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "ualloc/ualloc.h"
 #include "interpreter.h"
@@ -25,11 +26,71 @@ struct gosub_elem {
 
 struct gosub_elem *gosub_stack = NULL;
 
+struct variable {
+	struct variable *next;
+	const char *name;
+	real val;
+};
+
+static struct variable *variables = NULL;
+
+static int8_t intr_getVar(struct variable **var, const char *name, int8_t create)
+{
+	(*var) = variables;
+	while ((*var) != NULL) {
+		if (strcasecmp((*var)->name, name) == 0) {
+			return 0;
+		}
+		(*var) = (*var)->next;
+	}
+
+	if (create) {
+		char *vname;
+		(*var) = umalloc(sizeof(struct variable));
+		if ((*var) == NULL) {
+			return -ENOMEM;
+		}
+
+		vname = umalloc(strlen(name) + 1);
+		if (vname == NULL) {
+			ufree(*var);
+			return -ENOMEM;
+		}
+
+		strcpy(vname, name);
+		(*var)->name = vname;
+		memcpy(&(*var)->val, &rzero, sizeof(real));
+
+		(*var)->next = variables;
+		variables = (*var);
+
+		return 0;
+	}
+
+	return -ENOENT;
+}
+
 static int8_t intr_collapseExp(real *o, struct token *tstr, struct token **end)
 {
+	struct variable *var;
+	int8_t err = -EINVAL;
+
 	/* TODO */
+
+	if (tstr->type == token_var) {
+		err = intr_getVar(&var, tstr->value, 0);
+		if (err < 0) {
+			return err;
+		}
+		memcpy(o, &var->val, sizeof(*o));
+	}
+	else if (tstr->type == token_real) {
+		err = real_ator(tstr->value, o);
+	}
+
 	*end = tstr->next;
-	return 0;
+
+	return err;
 }
 
 static int8_t intr_isInteger(struct token *token)
@@ -52,7 +113,30 @@ static int8_t intr_isInteger(struct token *token)
 
 static int8_t intr_var(struct token *tstr)
 {
+	struct variable *var;
+	int err;
 
+	err = intr_getVar(&var, tstr->value, 1);
+	if (err < 0) {
+		return err;
+	}
+
+	if ((tstr->next == NULL) || (tstr->next->type != token_eq)) {
+		return -EINVAL;
+	}
+
+	tstr = tstr->next->next;
+
+	err = intr_collapseExp(&var->val, tstr, &tstr);
+	if (err < 0) {
+		return err;
+	}
+
+	if (tstr != NULL) {
+		return -EINVAL;
+	}
+
+	return 0;
 }
 
 static int8_t intr_print(struct token *tstr)
@@ -62,7 +146,9 @@ static int8_t intr_print(struct token *tstr)
 	real r;
 	struct token *next = NULL;
 
-	while (1) {
+	tstr = tstr->next;
+
+	while (tstr != NULL) {
 		switch (tstr->type) {
 			case token_str:
 				vga_puts(tstr->value);
@@ -70,7 +156,7 @@ static int8_t intr_print(struct token *tstr)
 
 			case token_real:
 			case token_var:
-				err = intr_collapseExp(&r, tstr->next, &next);
+				err = intr_collapseExp(&r, tstr, &next);
 				if (err < 0) {
 					return -EINVAL;
 				}
@@ -99,18 +185,18 @@ static int8_t intr_print(struct token *tstr)
 
 		first = 0;
 
-		if (tstr->next == NULL) {
-			vga_putc('\n');
-			return 0;
-		}
 		tstr = (next != NULL) ? next : tstr->next;
 		next = NULL;
 	}
+
+	vga_putc('\n');
+	return 0;
 }
 
 static int8_t intr_input(struct token *tstr)
 {
-
+	/* TODO */
+	return -ENOSYS;
 }
 
 static int8_t intr_for(struct token *tstr)
@@ -125,6 +211,8 @@ static int8_t intr_next(struct token *tstr)
 
 static int8_t intr_goto(struct token *tstr)
 {
+	tstr = tstr->next;
+
 	if (!intr_isInteger(tstr) || (tstr->next != NULL)) {
 		return -EINVAL;
 	}
@@ -136,6 +224,8 @@ static int8_t intr_if(struct token *tstr)
 {
 	int8_t condition, err;
 	real c;
+
+	tstr = tstr->next;
 
 	err = intr_collapseExp(&c, tstr, &tstr);
 	if (err < 0) {
@@ -175,12 +265,15 @@ static int8_t intr_if(struct token *tstr)
 
 static int8_t intr_dim(struct token *tstr)
 {
-
+	/* TODO */
+	return -ENOSYS;
 }
 
 static int8_t intr_gosub(struct token *tstr)
 {
 	struct gosub_elem *new;
+
+	tstr = tstr->next;
 
 	if (!intr_isInteger(tstr) || (tstr->next != NULL)) {
 		return -EINVAL;
@@ -192,11 +285,8 @@ static int8_t intr_gosub(struct token *tstr)
 	}
 
 	new->line = line_curr;
-	new->prev = NULL;
-	if (gosub_stack != NULL) {
-		new->prev = gosub_stack;
-	}
 
+	new->prev = gosub_stack;
 	gosub_stack = new;
 
 	line_next = atoi(tstr->value);
@@ -247,5 +337,5 @@ int8_t interpreter(struct token *tstr)
 		return -EINVAL;
 	}
 
-	return entry[tstr->type](tstr->next);
+	return entry[tstr->type](tstr);
 }
