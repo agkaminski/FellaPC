@@ -123,16 +123,12 @@ int8_t tty_update(char *cmd)
 {
 	static uint8_t last_key = KEY_NONE;
 	static uint8_t arcnt = 0;
-	uint8_t key;
 
 	if (keyboard_scan() < 0) {
 		return -1;
 	}
 
-	/* Ignore multiple keys being pressed */
-	key = keyboard_keys.keys[0];
-
-	if (key == last_key && key != KEY_NONE) {
+	if ((keyboard_keys.key == last_key) && (keyboard_keys.key != KEY_NONE)) {
 		if (arcnt < AUTOREPEAT_THRESHOLD) {
 			++arcnt;
 		}
@@ -141,23 +137,23 @@ int8_t tty_update(char *cmd)
 		arcnt = 0;
 	}
 
-	if (key != last_key || arcnt >= AUTOREPEAT_THRESHOLD) {
-		last_key = key;
+	if ((keyboard_keys.key != last_key) || (arcnt >= AUTOREPEAT_THRESHOLD)) {
+		last_key = keyboard_keys.key;
 
 		vga_resetCursor();
 
-		if (key == KEY_ENTER) {
+		if (keyboard_keys.key == KEY_ENTER) {
 			strcpy(cmd, line);
 			memset(line, '\0', sizeof(line));
 			vga_newLine();
 			return 1;
 		}
 
-		if (tty_handleSpecial(keyboard_keys.mod, key)) {
+		if (tty_handleSpecial(keyboard_keys.mod, keyboard_keys.key)) {
 			return 0;
 		}
 		else {
-			char c = tty_key2ascii(keyboard_keys.mod, key);
+			char c = tty_key2ascii(keyboard_keys.mod, keyboard_keys.key);
 			if (c != '\0') {
 				tty_insert(c);
 				return 0;

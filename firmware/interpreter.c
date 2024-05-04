@@ -581,7 +581,7 @@ int8_t intr_run(struct line *start)
 
 	while (curr != NULL) {
 		if (keyboard_scan() >= 0) {
-			if (keyboard_keys.keys[0] == KEY_ESC) {
+			if (keyboard_keys.key == KEY_ESC) {
 				break;
 			}
 		}

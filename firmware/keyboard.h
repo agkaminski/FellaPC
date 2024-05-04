@@ -13,7 +13,7 @@
 
 struct keys {
 	uint8_t mod;
-	uint8_t keys[6];
+	uint8_t key;
 };
 
 extern struct keys keyboard_keys;

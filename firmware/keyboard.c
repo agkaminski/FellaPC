@@ -75,42 +75,6 @@ static uint8_t getModifier(uint8_t key)
 	}
 }
 
-static int8_t keyPress(uint8_t key)
-{
-	uint8_t i;
-	/* Find first free place */
-	for (i = 0; i < sizeof(keyboard_keys.keys) / sizeof(keyboard_keys.keys[0]); ++i) {
-		if (keyboard_keys.keys[i] == KEY_NONE) {
-			keyboard_keys.keys[i] = key;
-			return 0;
-		}
-	}
-
-	/* Overflow */
-	return -1;
-}
-
-static int8_t keyRelease(uint8_t key)
-{
-	uint8_t i;
-
-	for (i = 0; i < sizeof(keyboard_keys.keys) / sizeof(keyboard_keys.keys[0]); ++i) {
-		if (keyboard_keys.keys[i] == key) {
-			/* Remove and compress */
-			for (; i < sizeof(keyboard_keys.keys) / sizeof(keyboard_keys.keys[0]) - 1; ++i) {
-				keyboard_keys.keys[i] = keyboard_keys.keys[i + 1];
-			}
-
-			keyboard_keys.keys[i] = KEY_NONE;
-
-			return 0;
-		}
-	}
-
-	/* Key not found? */
-	return -1;
-}
-
 int8_t keyboard_scan(void)
 {
 	/* Check Fn key before, so we know what to do */
@@ -137,17 +101,19 @@ int8_t keyboard_scan(void)
 							keyboard_keys.mod &= ~modifier;
 					}
 					else {
-						int8_t ret;
+						int8_t ret = 0;
 						if (row & (1 << j)) {
-							ret = keyPress(key);
+							if (keyboard_keys.key != KEY_NONE) {
+								ret = -1;
+							}
+							keyboard_keys.key = key;
 						}
 						else {
-							ret = keyRelease(key);
-							if (ret < 0) {
-								/* Handle edge case of Fn being released or pressed when the
-								 * modified key is still pressed */
-								ret = keyRelease(isFn ? MAIN(map[j][i]) : ALT(map[j][i]));
+							if ((keyboard_keys.key != MAIN(map[j][i])) &&
+									(keyboard_keys.key != ALT(map[j][i]))) {
+										ret = -1;
 							}
+							keyboard_keys.key = KEY_NONE;
 						}
 
 						if (ret < 0) {
