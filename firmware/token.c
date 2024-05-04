@@ -25,6 +25,7 @@ static const struct {
 	{ "goto", token_goto },
 	{ "if", token_if },
 	{ "then", token_then },
+	{ "else", token_else },
 	{ "dim", token_dim },
 	{ "gosub", token_gosub },
 	{ "return", token_return },

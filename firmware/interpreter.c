@@ -11,9 +11,17 @@
 #include "vga.h"
 #include "real.h"
 
-static int8_t intr_collapseExp(real *o, struct token *tstr)
+static int8_t intr_collapseExp(real *o, struct token *tstr, struct token **end)
 {
+	/* TODO */
+	*end = tstr->next;
+	return 0;
+}
 
+static int8_t intr_jump(const char *number)
+{
+	/* TODO */
+	return 0;
 }
 
 static int8_t intr_var(struct token *tstr)
@@ -26,6 +34,7 @@ static int8_t intr_print(struct token *tstr)
 	int8_t first = 1, err;
 	char buff[20];
 	real r;
+	struct token *next = NULL;
 
 	while (1) {
 		switch (tstr->type) {
@@ -35,7 +44,10 @@ static int8_t intr_print(struct token *tstr)
 
 			case token_real:
 			case token_var:
-				err = intr_collapseExp(&r, tstr);
+				err = intr_collapseExp(&r, tstr->next, &next);
+				if (err < 0) {
+					return -EINVAL;
+				}
 				real_rtoa(buff, &r);
 				vga_puts(buff);
 				break;
@@ -65,7 +77,8 @@ static int8_t intr_print(struct token *tstr)
 			vga_putc('\n');
 			return 0;
 		}
-		tstr = tstr->next;
+		tstr = (next != NULL) ? next : tstr->next;
+		next = NULL;
 	}
 }
 
@@ -91,7 +104,41 @@ static int8_t intr_goto(struct token *tstr)
 
 static int8_t intr_if(struct token *tstr)
 {
+	int8_t condition, err;
+	real c;
 
+	err = intr_collapseExp(&c, tstr, &tstr);
+	if (err < 0) {
+		return -EINVAL;
+	}
+
+	condition = !real_isZero(&c);
+
+	if (tstr->type != token_then) {
+		return -EINVAL;
+	}
+	tstr = tstr->next;
+	if ((tstr == NULL) || (tstr->type != token_real)) {
+		return -EINVAL;
+	}
+
+	if (condition) {
+		return intr_jump(tstr->value);
+	}
+
+	if (tstr == NULL) {
+		return 0;
+	}
+
+	if (tstr->type != token_else) {
+		return -1;
+	}
+	tstr = tstr->next;
+	if ((tstr == NULL) || (tstr->type != token_real)) {
+		return -EINVAL;
+	}
+
+	return intr_jump(tstr->value);
 }
 
 static int8_t intr_dim(struct token *tstr)

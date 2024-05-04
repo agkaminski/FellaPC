@@ -20,6 +20,8 @@ typedef struct {
 	int8_t s;
 } real;
 
+int8_t real_isZero(const real *r);
+
 void real_normalize(real *r);
 
 void real_rtoa(char *buff, const real *r);

@@ -35,6 +35,7 @@ enum token_type {
 	token_to,
 	token_step,
 	token_then,
+	token_else,
 
 	/* Operators */
 	token_plus,
