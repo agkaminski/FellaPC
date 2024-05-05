@@ -55,10 +55,18 @@ static struct token *token_curr;
 
 static int8_t interactive = 1;
 
+static struct token *rpn_output = NULL;
+static struct token *rpn_opstack = NULL;
+static struct token *rpn_stack = NULL;
+
 static void intr_die(int err) __attribute__ ((noreturn));
 
 static void intr_die(int err)
 {
+	token_free(&rpn_output);
+	token_free(&rpn_opstack);
+	token_free(&rpn_stack);
+
 	if (!interactive) {
 		char buff[8];
 		vga_puts("\nLine ");
@@ -107,9 +115,9 @@ static void intr_expectInteger(void)
 	}
 }
 
-static void intr_toktor(real *o)
+static void intr_toktor(struct token *tok, real *o)
 {
-	if (real_ator(token_curr->value, o) == NULL) {
+	if (real_ator(tok->value, o) == NULL) {
 		intr_die(-ERANGE);
 	}
 }
@@ -150,22 +158,159 @@ static struct variable *intr_getTokVar(void)
 	return intr_getVar(token_curr->value, 1);
 }
 
+static uint8_t intr_opPrecedence(enum token_type type)
+{
+	switch (type) {
+		case token_mul:
+		case token_div:
+		case token_mod:
+			return 2;
+
+		case token_plus:
+		case token_minus:
+			return 1;
+
+		case token_lt:
+		case token_lteq:
+		case token_gt:
+		case token_gteq:
+		case token_eq:
+			return 0;
+	}
+
+	intr_die(-EINVAL);
+}
+
+static void intr_shuntingYard(void)
+{
+	/* Use Edsger Dijkstra's Shunting Yard algorithm to
+	 * convert natural expression to easy to calculate
+	 * RPN. All tokens related to the expresion are
+	 * removed from the token string and shall be freed
+	 * after completing the calculation. */
+
+	struct token *curr, *t;
+
+	while ((token_curr != NULL) && (
+			(token_curr->type == token_var) ||
+			(token_curr->type == token_real) ||
+			(token_curr->type >= TOKEN_OPERATOR_START) &&
+			(token_curr->type != token_semicol))) {
+
+		curr = token_curr;
+		token_curr = token_curr->next;
+		token_pop(NULL, curr); /* NULL's ok, never first element */
+
+		if ((curr->type == token_real) || (curr->type == token_var)) {
+			token_append(&rpn_output, curr);
+		}
+		else if ((curr->type == token_lpara) || (curr->type >= TOKEN_FUNCTION_START)) {
+			token_push(&rpn_opstack, curr);
+		}
+		else if (curr->type == token_coma) {
+			while (1) {
+				t = rpn_opstack;
+				if (t == NULL) {
+					intr_die(-EINVAL);
+				}
+
+				if (t->type == token_lpara) {
+					break;
+				}
+
+				token_pop(&rpn_opstack, t);
+				token_append(&rpn_output, t);
+			}
+
+			ufree(curr);
+		}
+		else if (curr->type == token_rpara) {
+			while (1) {
+				t = rpn_opstack;
+				if (t == NULL) {
+					intr_die(-EINVAL);
+				}
+
+				token_pop(&rpn_opstack, t);
+				if (t->type == token_lpara) {
+					break;
+				}
+
+				token_append(&rpn_output, t);
+			}
+
+			/* Discard left parenthesis */
+			ufree(t);
+
+			t = rpn_opstack;
+			if ((t != NULL) && (t->type >= TOKEN_FUNCTION_START)) {
+				token_pop(&rpn_opstack, t);
+				token_append(&rpn_output, t);
+			}
+		}
+		else { /* Operator */
+			while ((rpn_opstack != NULL) && (rpn_opstack->type != token_lpara) &&
+					(intr_opPrecedence(rpn_opstack->type) >= intr_opPrecedence(curr->type))) {
+				t = rpn_opstack;
+				token_pop(&rpn_opstack, t);
+				token_append(&rpn_output, t);
+			}
+
+			token_push(&rpn_opstack, curr);
+		}
+	}
+
+	while (rpn_opstack != NULL) {
+		t = rpn_opstack;
+		if (t->type == token_lpara) {
+			intr_die(-EINVAL);
+		}
+		token_pop(&rpn_opstack, t);
+		token_append(&rpn_output, t);
+	}
+}
+
 static void intr_collapseExp(real *o)
 {
 	struct variable *var;
 
-	/* TODO */
+	intr_shuntingYard();
 
-	if (token_curr->type == token_var) {
-		var = intr_getTokVar();
-		memcpy(o, &var->val, sizeof(*o));
-	}
-	else if (token_curr->type == token_real) {
-		intr_toktor(o);
+	/* FIXME: Calculation WIP */
+
+	while (rpn_output != NULL) {
+		struct token *tok = rpn_output;
+		token_pop(&rpn_output, tok);
+
+		if (rpn_output->type == token_var) {
+			var = intr_getVar(tok->value, 0);
+			memcpy(o, &var->val, sizeof(*o));
+			token_push(&rpn_stack, tok);
+		}
+		else if (tok->type == token_real) {
+			intr_toktor(tok, o);
+			token_push(&rpn_stack, tok);
+		}
+		else { /* Operation */
+			real a, b;
+			if (tok->type == token_plus) {
+				tok = rpn_stack;
+				token_pop(&rpn_stack, tok);
+				intr_toktor(tok, &a);
+				ufree(tok);
+				tok = rpn_stack;
+				token_pop(&rpn_stack, tok);
+				intr_toktor(tok, &b);
+				ufree(tok);
+
+				real_add(o, &a, &b);
+			}
+		}
 	}
 
-	/* Need to eat all relevant tokens */
-	token_curr = token_curr->next;
+	token_free(&rpn_output);
+
+	/* All related tokens has been consumed and freed */
 }
 
 static void intr_var(void)
@@ -501,7 +646,7 @@ void intr_line(const char *line)
 	}
 
 	if (tstr->type >= (sizeof(entry) / sizeof(*entry))) {
-		token_free(tstr);
+		token_free(&tstr);
 		intr_die(-EINVAL);
 	}
 
@@ -509,7 +654,7 @@ void intr_line(const char *line)
 
 	entry[tstr->type]();
 
-	token_free(tstr);
+	token_free(&tstr);
 }
 
 void intr_run(struct line *start)

@@ -93,7 +93,13 @@ struct token {
 	char *value;
 };
 
-void token_free(struct token *first);
+void token_push(struct token **queue, struct token *t);
+
+void token_append(struct token **queue, struct token *t);
+
+void token_pop(struct token **queue, struct token *t);
+
+void token_free(struct token **first);
 
 int8_t token_tokenize(struct token **tstr, const char *line);
 

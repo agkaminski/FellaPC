@@ -54,13 +54,56 @@ static const struct {
 	{ "poke", token_poke }
 };
 
-void token_free(struct token *first)
+void token_push(struct token **queue, struct token *t)
+{
+	t->prev = NULL;
+	t->next = (*queue);
+	(*queue) = t;
+}
+
+void token_append(struct token **queue, struct token *t)
+{
+	struct token *head = *queue;
+
+	if ((*queue) == NULL) {
+		token_push(queue, t);
+	}
+	else {
+		while (head->next != NULL) {
+			head = head->next;
+		}
+
+		head->next = t;
+		t->prev = head;
+		t->next = NULL;
+	}
+}
+
+void token_pop(struct token **queue, struct token *t)
+{
+	if (t == (*queue)) {
+		(*queue) = t->next;
+	}
+
+	if (t->next != NULL) {
+		t->next->prev = t->prev;
+	}
+
+	if (t->prev != NULL) {
+		t->prev->next = t->next;
+	}
+
+	t->next = NULL;
+	t->prev = NULL;
+}
+
+void token_free(struct token **first)
 {
 	struct token *victim;
 
-	while (first != NULL) {
-		victim = first;
-		first = first->next;
+	while ((*first) != NULL) {
+		victim = (*first);
+		(*first) = (*first)->next;
 		ufree(victim->value);
 		ufree(victim);
 	}
@@ -69,7 +112,7 @@ void token_free(struct token *first)
 int8_t token_tokenize(struct token **tstr, const char *line)
 {
 	uint8_t pos = 0, start, isreal, isstr;
-	struct token *first = NULL, *prev, *curr;
+	struct token *first = NULL, *curr;
 
 	while (line[pos] != '\0') {
 		while ((line[pos] == ' ') || (line[pos] == '\t')) {
@@ -117,7 +160,7 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 
 		curr = umalloc(sizeof(*curr));
 		if (curr == NULL) {
-			token_free(first);
+			token_free(&first);
 			return -ENOMEM;
 		}
 		curr->value = NULL;
@@ -129,7 +172,7 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 
 			curr->value = umalloc(pos - start + 1);
 			if (curr->value == NULL) {
-				token_free(first);
+				token_free(&first);
 				return -ENOMEM;
 			}
 			memcpy(curr->value, line + start, pos - start);
@@ -166,7 +209,7 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 			 * Invalid token should be get by the interpreter, so
 			 * theoretically it's 100% ok */
 			if ((line[pos] < '%') || (line[pos] > '>')) {
-				token_free(first);
+				token_free(&first);
 				return -EINVAL;
 			}
 			curr->type = (enum token_type)line[pos];
@@ -176,14 +219,7 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 			++pos;
 		}
 
-		if (first == NULL) {
-			first = curr;
-		}
-		else {
-			prev->next = curr;
-			curr->prev = prev;
-		}
-		prev = curr;
+		token_append(&first, curr);
 	}
 
 	*tstr = first;
