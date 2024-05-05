@@ -13,7 +13,7 @@ struct line {
 	char *data;
 };
 
-void cmd_die(int8_t err);
+void cmd_die(int8_t err) __attribute__ ((noreturn));
 
 int8_t cmd_parse(const char *cmd);
 

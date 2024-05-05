@@ -55,6 +55,8 @@ static struct token *token_curr;
 
 static int8_t interactive = 1;
 
+static void intr_die(int err) __attribute__ ((noreturn));
+
 static void intr_die(int err)
 {
 	if (!interactive) {
