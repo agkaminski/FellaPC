@@ -90,6 +90,9 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 
 		while (line[pos] != '\0') {
 			if (isreal && !isdigit(line[pos]) && (line[pos] != '.')) {
+				if ((line[pos] == ' ') || (line[pos] == '\t')) {
+					break;
+				}
 				return -EINVAL;
 			}
 			else if (isstr) {
