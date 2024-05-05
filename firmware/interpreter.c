@@ -70,6 +70,15 @@ static void intr_die(int err)
 	cmd_die(err);
 }
 
+static void *intr_malloc(uint8_t size)
+{
+	void *ret = umalloc(size);
+	if (ret == NULL) {
+		intr_die(-ENOMEM);
+	}
+	return ret;
+}
+
 static void intr_expect(enum token_type tok)
 {
 	if (tok == token_none) {
@@ -119,16 +128,8 @@ static void intr_getVar(struct variable **var, const char *name, int8_t create)
 		intr_die(-ENOENT);
 	}
 
-	(*var) = umalloc(sizeof(struct variable));
-	if ((*var) == NULL) {
-		intr_die(-ENOMEM);
-	}
-
-	vname = umalloc(strlen(name) + 1);
-	if (vname == NULL) {
-		ufree(*var);
-		intr_die(-ENOMEM);
-	}
+	(*var) = intr_malloc(sizeof(struct variable));
+	vname = intr_malloc(strlen(name) + 1);
 
 	strcpy(vname, name);
 	(*var)->name = vname;
@@ -294,11 +295,7 @@ static void intr_for(void)
 		intr_expect(token_none);
 	}
 
-	f = umalloc(sizeof(*f));
-	if (f == NULL) {
-		intr_die(-ENOMEM);
-	}
-
+	f = intr_malloc(sizeof(*f));
 	f->line = line_next;
 	f->iter = iter;
 	f->limit = limit;
@@ -407,14 +404,10 @@ static void intr_gosub(void)
 
 	intr_expectInteger();
 
-	new = umalloc(sizeof(*new));
-	if (new == NULL) {
-		intr_die(-ENOMEM);
-	}
-
+	new = intr_malloc(sizeof(*new));
 	new->line = line_curr;
-
 	new->prev = gosub_stack;
+
 	gosub_stack = new;
 
 	jump.line = atoi(token_curr->value);
