@@ -6,9 +6,9 @@
 
 .export			_dram_refresh
 
-.proc			_dram_refresh: near
-
 .segment		"CODE"
+
+.proc			_dram_refresh: near
 
 				LDY #0
 @loop:			LDA $00, Y
