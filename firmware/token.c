@@ -49,7 +49,9 @@ static const struct {
 	{ "mid$", token_mid },
 	{ "left$", token_left },
 	{ "right$", token_right },
-	{ "asc", token_asc }
+	{ "asc", token_asc },
+	{ "peek", token_peek },
+	{ "poke", token_poke }
 };
 
 void token_free(struct token *first)

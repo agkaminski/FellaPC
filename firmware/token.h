@@ -7,6 +7,9 @@
 #ifndef TOKEN_H_
 #define TOKEN_H_
 
+#define TOKEN_FUNCTION_START 128
+#define TOKEN_OPERATOR_START 37
+
 enum token_type {
 	/* Beginning tokens */
 
@@ -45,8 +48,24 @@ enum token_type {
 	token_right,
 	token_asc,
 
+	/* Operators */
+	token_mod = '%',
+	token_lpara = '(',
+	token_rpara = ')',
+	token_mul = '*',
+	token_plus = '+',
+	token_coma = ',',
+	token_minus = '-',
+	token_div = '\\',
+	token_semicol = ';',
+	token_lt = '<',
+	token_eq = '=',
+	token_gt = '>',
+	token_lteq = token_lt + 10,
+	token_gteq = token_gt + 10,
+
 	/* Functions */
-	token_abs,
+	token_abs = TOKEN_FUNCTION_START,
 	token_and,
 	token_atn,
 	token_cos,
@@ -60,22 +79,8 @@ enum token_type {
 	token_sin,
 	token_sqr,
 	token_tan,
-
-	/* Operators */
-	token_plus = '+',
-	token_minus = '-',
-	token_mul = '*',
-	token_div = '\\',
-	token_mod = '%',
-	token_lbrace = '(',
-	token_rbrace = ')',
-	token_eq = '=',
-	token_lt = '<',
-	token_gt = '>',
-	token_semicol = ';',
-	token_coma = ',',
-	token_lteq = token_lt + 10,
-	token_gteq = token_gt + 10,
+	token_poke,
+	token_peek,
 
 	/* Error */
 	token_none
