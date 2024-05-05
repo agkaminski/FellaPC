@@ -360,7 +360,7 @@ int8_t real_compare(const real *a, const real *b)
 		return 0;
 	}
 
-	if (x.s < 0) {
+	if (t.s < 0) {
 		return (a->s > 0) ? -1 : 1;
 	}
 
