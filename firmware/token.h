@@ -7,6 +7,8 @@
 #ifndef TOKEN_H_
 #define TOKEN_H_
 
+#include "real.h"
+
 #define TOKEN_FUNCTION_START 128
 #define TOKEN_OPERATOR_START 37
 
@@ -90,7 +92,8 @@ struct token {
 	struct token *next;
 	struct token *prev;
 	enum token_type type;
-	char *value;
+	real value;
+	char *str;
 };
 
 void token_push(struct token **queue, struct token *t);

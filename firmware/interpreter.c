@@ -18,17 +18,17 @@
 #include "keyboard.h"
 #include "tty.h"
 
-static uint16_t line_curr;
-static uint16_t line_next;
+static int line_curr;
+static int line_next;
 
 static struct {
-	uint16_t line;
+	int line;
 	int8_t jump;
 } jump;
 
 struct gosub_elem {
 	struct gosub_elem *prev;
-	uint16_t line;
+	int line;
 };
 
 struct gosub_elem *gosub_stack = NULL;
@@ -43,7 +43,7 @@ static struct variable *variables = NULL;
 
 struct for_elem {
 	struct for_elem *next;
-	uint16_t line;
+	int line;
 	struct variable *iter;
 	real limit;
 	real step;
@@ -101,25 +101,12 @@ static void intr_expect(enum token_type tok)
 	}
 }
 
-static void intr_expectInteger(void)
+static int intr_expectInteger(void)
 {
 	uint8_t pos = 0;
 
 	intr_expect(token_real);
-
-	while (token_curr->value[pos] != '\0') {
-		if (!isdigit(token_curr->value[pos])) {
-			intr_die(-EINVAL);
-		}
-		++pos;
-	}
-}
-
-static void intr_toktor(struct token *tok, real *o)
-{
-	if (real_ator(tok->value, o) == NULL) {
-		intr_die(-ERANGE);
-	}
+	return real_rtoi(&token_curr->value);
 }
 
 static struct variable *intr_getVar(const char *name, int8_t create)
@@ -155,7 +142,7 @@ static struct variable *intr_getVar(const char *name, int8_t create)
 static struct variable *intr_getTokVar(void)
 {
 	intr_expect(token_var);
-	return intr_getVar(token_curr->value, 1);
+	return intr_getVar(token_curr->str, 1);
 }
 
 static uint8_t intr_opPrecedence(enum token_type type)
@@ -272,8 +259,6 @@ static void intr_shuntingYard(void)
 
 static void intr_collapseExp(real *o)
 {
-	struct variable *var;
-
 	intr_shuntingYard();
 
 	/* FIXME: Calculation WIP */
@@ -282,33 +267,37 @@ static void intr_collapseExp(real *o)
 		struct token *tok = rpn_output;
 		token_pop(&rpn_output, tok);
 
-		if (rpn_output->type == token_var) {
-			var = intr_getVar(tok->value, 0);
-			memcpy(o, &var->val, sizeof(*o));
+		if (tok->type == token_var) {
+			struct variable *var = intr_getVar(tok->str, 0);
+			tok->type = token_real;
+			memcpy(&tok->value, &var->val, sizeof(tok->value));
+			ufree(tok->str);
+			tok->str = NULL;
 			token_push(&rpn_stack, tok);
 		}
 		else if (tok->type == token_real) {
-			intr_toktor(tok, o);
 			token_push(&rpn_stack, tok);
 		}
 		else { /* Operation */
-			real a, b;
 			if (tok->type == token_plus) {
-				tok = rpn_stack;
-				token_pop(&rpn_stack, tok);
-				intr_toktor(tok, &a);
-				ufree(tok);
-				tok = rpn_stack;
-				token_pop(&rpn_stack, tok);
-				intr_toktor(tok, &b);
-				ufree(tok);
+				struct token *a, *b;
+				real r;
 
-				real_add(o, &a, &b);
+				b = rpn_stack;
+				token_pop(&rpn_stack, b);
+				a = rpn_stack;
+
+				real_add(&r, &a->value, &b->value);
+
+				memcpy(&a->value, &r, sizeof(r));
+				ufree(b);
 			}
 		}
 	}
 
-	token_free(&rpn_output);
+	memcpy(o, &rpn_stack->value, sizeof(*o));
+	ufree(rpn_stack);
+	rpn_stack = NULL;
 
 	/* All related tokens has been consumed and freed */
 }
@@ -339,7 +328,7 @@ static void intr_print(void)
 	while (token_curr != NULL) {
 		switch (token_curr->type) {
 			case token_str:
-				vga_puts(token_curr->value);
+				vga_puts(token_curr->str);
 				break;
 
 			case token_real:
@@ -387,7 +376,7 @@ static void intr_input(void)
 	}
 
 	if (token_curr->type == token_str) {
-		prompt = token_curr->value;
+		prompt = token_curr->str;
 
 		token_curr = token_curr->next;
 		intr_expect(token_coma);
@@ -479,11 +468,7 @@ static void intr_next(void)
 			memcpy(&f->iter->val, &acc, sizeof(real));
 
 			err = real_sub(&acc, &f->limit, &f->iter->val);
-			if (acc.s > 0) {
-				jump.line = f->line;
-				jump.jump = 1;
-			}
-			else {
+			if (real_isZero(&acc) || (acc.s < 0)) {
 				if (prev != NULL) {
 					prev->next = f->next;
 				}
@@ -491,6 +476,10 @@ static void intr_next(void)
 					for_stack = f->next;
 				}
 				ufree(f);
+			}
+			else {
+				jump.line = f->line;
+				jump.jump = 1;
 			}
 			break;
 		}
@@ -501,9 +490,7 @@ static void intr_next(void)
 
 static void intr_goto(void)
 {
-	intr_expectInteger();
-
-	jump.line = atoi(token_curr->value);
+	jump.line = intr_expectInteger();
 	jump.jump = 1;
 
 	token_curr = token_curr->next;
@@ -521,10 +508,9 @@ static void intr_if(void)
 	intr_expect(token_then);
 
 	token_curr = token_curr->next;
-	intr_expectInteger();
 
 	if (condition) {
-		jump.line = atoi(token_curr->value);
+		jump.line = intr_expectInteger();
 		jump.jump = 1;
 		return;
 	}
@@ -534,9 +520,8 @@ static void intr_if(void)
 		intr_expect(token_else);
 
 		token_curr = token_curr->next;
-		intr_expectInteger();
 
-		jump.line = atoi(token_curr->value);
+		jump.line = intr_expectInteger();
 		jump.jump = 1;
 
 		token_curr = token_curr->next;
@@ -554,16 +539,14 @@ static void intr_gosub(void)
 {
 	struct gosub_elem *new;
 
-	intr_expectInteger();
+	jump.line = intr_expectInteger();
+	jump.jump = 1;
 
 	new = intr_malloc(sizeof(*new));
 	new->line = line_curr;
 	new->prev = gosub_stack;
 
 	gosub_stack = new;
-
-	jump.line = atoi(token_curr->value);
-	jump.jump = 1;
 
 	token_curr = token_curr->next;
 	intr_expect(token_none);
@@ -680,6 +663,10 @@ void intr_run(struct line *start)
 			curr = start;
 			while ((curr != NULL) && (curr->number != jump.line)) {
 				curr = curr->next;
+			}
+
+			if (curr == NULL) {
+				intr_die(-EINVAL);
 			}
 		}
 		else {

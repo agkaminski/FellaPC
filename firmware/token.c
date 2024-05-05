@@ -8,9 +8,11 @@
 #include <ctype.h>
 #include <string.h>
 #include <errno.h>
+#include <ctype.h>
 
 #include "token.h"
 #include "ualloc/ualloc.h"
+#include "real.h"
 
 static const struct {
 	const char *str;
@@ -104,7 +106,7 @@ void token_free(struct token **first)
 	while ((*first) != NULL) {
 		victim = (*first);
 		(*first) = (*first)->next;
-		ufree(victim->value);
+		ufree(victim->str);
 		ufree(victim);
 	}
 }
@@ -163,23 +165,35 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 			token_free(&first);
 			return -ENOMEM;
 		}
-		curr->value = NULL;
+		curr->str = NULL;
 		curr->next = NULL;
 		curr->prev = NULL;
 
 		if (start != pos) {
 			uint8_t tpos = 0;
 
-			curr->value = umalloc(pos - start + 1);
-			if (curr->value == NULL) {
+			curr->str = umalloc(pos - start + 1);
+			if (curr->str == NULL) {
+				ufree(curr);
 				token_free(&first);
 				return -ENOMEM;
 			}
-			memcpy(curr->value, line + start, pos - start);
-			curr->value[pos - start] = '\0';
+			memcpy(curr->str, line + start, pos - start);
+			curr->str[pos - start] = '\0';
 
 			if (isreal) {
+				const char *ret;
+
 				curr->type = token_real;
+				ret = real_ator(curr->str, &curr->value);
+				ufree(curr->str);
+				curr->str = NULL;
+
+				if (ret == NULL) {
+					ufree(curr);
+					token_free(&first);
+					return -EINVAL;
+				}
 			}
 			else if (isstr) {
 				curr->type = token_str;
@@ -188,7 +202,7 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 			else {
 				uint8_t i, found = 0;
 				for (i = 0; i < sizeof(tokstr) / sizeof(*tokstr); ++i) {
-					if (strcasecmp(tokstr[i].str, curr->value) == 0) {
+					if (strcasecmp(tokstr[i].str, curr->str) == 0) {
 						curr->type = tokstr[i].type;
 						found = 1;
 						break;
@@ -199,8 +213,8 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 					curr->type = token_var;
 				}
 				else {
-					ufree(curr->value);
-					curr->value = NULL;
+					ufree(curr->str);
+					curr->str = NULL;
 				}
 			}
 		}
@@ -209,6 +223,7 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 			 * Invalid token should be get by the interpreter, so
 			 * theoretically it's 100% ok */
 			if ((line[pos] < '%') || (line[pos] > '>')) {
+				ufree(curr);
 				token_free(&first);
 				return -EINVAL;
 			}
