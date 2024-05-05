@@ -57,16 +57,16 @@ static void cmd_new(void)
 
 static void cmd_addLine(const char *cmd)
 {
-	char *end;
-	unsigned long number = strtoul(cmd, &end, 10);
+	/* strtoul would be much better, but can't afford it */
+	int number = atoi(cmd);
 	struct line *line, *prev, *curr;
 
-	if (number & 0xffff0000UL) {
+	if (number < 0) {
 		cmd_die(-ERANGE);
 	}
 
-	while (isspace(*end)) {
-		++end;
+	while (isdigit(*cmd) || isspace(*cmd)) {
+		++cmd;
 	}
 
 	line = umalloc(sizeof(*line));
@@ -75,13 +75,13 @@ static void cmd_addLine(const char *cmd)
 	}
 
 	line->data = NULL;
-	if (*end != '\0') {
-		line->data = umalloc(strlen(end) + 1);
+	if (*cmd != '\0') {
+		line->data = umalloc(strlen(cmd) + 1);
 		if (line->data == NULL) {
 			ufree(line);
 			cmd_die(-ENOMEM);
 		}
-		strcpy(line->data, end);
+		strcpy(line->data, cmd);
 	}
 
 	line->number = number;
