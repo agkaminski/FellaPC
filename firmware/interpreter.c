@@ -112,31 +112,40 @@ static void intr_toktor(real *o)
 	}
 }
 
-static void intr_getVar(struct variable **var, const char *name, int8_t create)
+static struct variable *intr_getVar(const char *name, int8_t create)
 {
+	struct variable *var;
 	char *vname;
 
-	(*var) = variables;
-	while ((*var) != NULL) {
-		if (strcasecmp((*var)->name, name) == 0) {
-			return;
+	var = variables;
+	while (var != NULL) {
+		if (strcasecmp(var->name, name) == 0) {
+			return var;
 		}
-		(*var) = (*var)->next;
+		var = var->next;
 	}
 
 	if (!create) {
 		intr_die(-ENOENT);
 	}
 
-	(*var) = intr_malloc(sizeof(struct variable));
+	var = intr_malloc(sizeof(struct variable));
 	vname = intr_malloc(strlen(name) + 1);
 
 	strcpy(vname, name);
-	(*var)->name = vname;
-	memcpy(&(*var)->val, &rzero, sizeof(real));
+	var->name = vname;
+	memcpy(&var->val, &rzero, sizeof(real));
 
-	(*var)->next = variables;
-	variables = (*var);
+	var->next = variables;
+	variables = var;
+
+	return var;
+}
+
+static struct variable *intr_getTokVar(void)
+{
+	intr_expect(token_var);
+	return intr_getVar(token_curr->value, 1);
 }
 
 static void intr_collapseExp(real *o)
@@ -146,7 +155,7 @@ static void intr_collapseExp(real *o)
 	/* TODO */
 
 	if (token_curr->type == token_var) {
-		intr_getVar(&var, token_curr->value, 0);
+		var = intr_getTokVar();
 		memcpy(o, &var->val, sizeof(*o));
 	}
 	else if (token_curr->type == token_real) {
@@ -163,7 +172,7 @@ static void intr_var(void)
 
 	token_curr = token_curr->prev;
 
-	intr_getVar(&var, token_curr->value, 1);
+	var = intr_getTokVar();
 
 	token_curr = token_curr->next;
 	intr_expect(token_eq);
@@ -238,8 +247,7 @@ static void intr_input(void)
 		token_curr = token_curr->next;
 	}
 
-	intr_expect(token_var);
-	intr_getVar(&var, token_curr->value, 1);
+	var = intr_getTokVar();
 
 	token_curr = token_curr->next;
 	intr_expect(token_none);
@@ -264,8 +272,7 @@ static void intr_for(void)
 
 	memcpy(&step, &rone, sizeof(real));
 
-	intr_expect(token_var);
-	intr_getVar(&iter, token_curr->value, 1);
+	iter = intr_getTokVar();
 
 	f = for_stack;
 	while (f != NULL) {
@@ -311,9 +318,7 @@ static void intr_next(void)
 	int8_t err;
 	real acc;
 
-	intr_expect(token_var);
-
-	intr_getVar(&var, token_curr->value, 0);
+	var = intr_getTokVar();
 
 	token_curr = token_curr->next;
 	intr_expect(token_none);
