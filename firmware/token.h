@@ -58,7 +58,7 @@ enum token_type {
 	token_plus = '+',
 	token_coma = ',',
 	token_minus = '-',
-	token_div = '\\',
+	token_div = '/',
 	token_semicol = ';',
 	token_lt = '<',
 	token_eq = '=',
