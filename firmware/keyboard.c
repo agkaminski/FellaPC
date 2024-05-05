@@ -15,9 +15,7 @@
 #define MAIN(key) ((key) & 0xff)
 #define ALT(key) (((key) >> 8) & 0xff)
 
-static uint8_t * const base = (void *)0x9000;
-
-static uint8_t lastState[16];
+extern void keyboard_scanLow(uint8_t *row);
 
 struct keys keyboard_keys = { 0 };
 
@@ -78,14 +76,19 @@ static uint8_t getModifier(uint8_t key)
 int8_t keyboard_scan(void)
 {
 	/* Check Fn key before, so we know what to do */
-	int8_t isFn = !(base[9] & (1 << 4));
-
+	int8_t isFn;
+	static uint8_t lastState[16];
+	uint8_t row[16];
 	uint8_t i;
-	for (i = 0; i < 16; ++i) {
-		uint8_t row = ~base[i];
-		uint8_t change = row ^ lastState[i];
 
-		lastState[i] = row;
+	keyboard_scanLow(row);
+
+	isFn = (row[9] & (1 << 4));
+
+	for (i = 0; i < 16; ++i) {
+		uint8_t change = row[i] ^ lastState[i];
+
+		lastState[i] = row[i];
 
 		if (change) {
 			uint8_t j;
@@ -93,7 +96,7 @@ int8_t keyboard_scan(void)
 				if (change & (1 << j)) {
 					uint8_t key = isFn ? ALT(map[j][i]) : MAIN(map[j][i]);
 					uint8_t modifier = getModifier(key);
-					uint8_t state = !!(row & (1 << j));
+					uint8_t state = !!(row[i] & (1 << j));
 					if (modifier) {
 						if (state)
 							keyboard_keys.mod |= modifier;
@@ -102,7 +105,7 @@ int8_t keyboard_scan(void)
 					}
 					else {
 						int8_t ret = 0;
-						if (row & (1 << j)) {
+						if (row[i] & (1 << j)) {
 							if (keyboard_keys.key != KEY_NONE) {
 								ret = -1;
 							}
