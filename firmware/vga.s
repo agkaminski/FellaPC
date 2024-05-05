@@ -141,13 +141,13 @@ cursor_state:	.res 1, $0
 
 				; row
 				LDY #1
-				STY $8002
+				STY VROW
 
 				; col
 				LDX #0
 
-@row_loop0:		STX $8001
-				LDA $8000
+@row_loop0:		STX VCOL
+				LDA VDATA
 				PHA
 				INX
 				CPX #COLS
@@ -155,28 +155,28 @@ cursor_state:	.res 1, $0
 
 				DEX
 				DEY
-				STY $8002
+				STY VROW
 
 @row_loop1:		PLA
-				STA $8000
+				STA VDATA
 				DEX
-				STX $8001
+				STX VCOL
 				CPX #255
 				BNE @row_loop1
 
 				INY
 				INY
 				INX
-				STY $8002
+				STY VROW
 				CPY #ROWS
 				BNE @row_loop0
 
 				; clear last row
 				LDA #$20
 				DEY
-				STY $8002
-@clr_loop:		STX $8001
-				STA $8000
+				STY VROW
+@clr_loop:		STX VCOL
+				STA VDATA
 				INX
 				CPX #COLS
 				BNE @clr_loop
