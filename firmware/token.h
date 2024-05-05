@@ -76,10 +76,14 @@ enum token_type {
 	token_coma = ',',
 	token_lteq = token_lt + 10,
 	token_gteq = token_gt + 10,
+
+	/* Error */
+	token_none
 };
 
 struct token {
 	struct token *next;
+	struct token *prev;
 	enum token_type type;
 	char *value;
 };

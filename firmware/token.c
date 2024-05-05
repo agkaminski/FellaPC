@@ -115,6 +115,7 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 		}
 		curr->value = NULL;
 		curr->next = NULL;
+		curr->prev = NULL;
 
 		if (start != pos) {
 			uint8_t tpos = 0;
@@ -173,6 +174,7 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 		}
 		else {
 			prev->next = curr;
+			curr->prev = prev;
 		}
 		prev = curr;
 	}

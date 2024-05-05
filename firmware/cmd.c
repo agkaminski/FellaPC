@@ -10,6 +10,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
+#include <setjmp.h>
 
 #include "cmd.h"
 #include "ualloc/ualloc.h"
@@ -18,6 +19,13 @@
 #include "interpreter.h"
 
 static struct line *line_head = NULL;
+
+jmp_buf cmd_env;
+
+void cmd_die(int8_t err)
+{
+	longjmp(cmd_env, err);
+}
 
 static void cmd_list(void)
 {
@@ -47,18 +55,14 @@ static void cmd_new(void)
 	intr_clean(1);
 }
 
-static int8_t cmdd_addLine(const char *cmd)
+static void cmd_addLine(const char *cmd)
 {
 	char *end;
 	unsigned long number = strtoul(cmd, &end, 10);
 	struct line *line, *prev, *curr;
 
-	if (end == NULL) {
-		return -EINVAL;
-	}
-
-	if ((number & 0xffffUL) != number) {
-		return -ERANGE;
+	if (number & 0xffff0000UL) {
+		cmd_die(-ERANGE);
 	}
 
 	while (isspace(*end)) {
@@ -67,7 +71,7 @@ static int8_t cmdd_addLine(const char *cmd)
 
 	line = umalloc(sizeof(*line));
 	if (line == NULL) {
-		return -ENOMEM;
+		cmd_die(-ENOMEM);
 	}
 
 	line->data = NULL;
@@ -75,7 +79,7 @@ static int8_t cmdd_addLine(const char *cmd)
 		line->data = umalloc(strlen(end) + 1);
 		if (line->data == NULL) {
 			ufree(line);
-			return -ENOMEM;
+			cmd_die(-ENOMEM);
 		}
 		strcpy(line->data, end);
 	}
@@ -85,7 +89,7 @@ static int8_t cmdd_addLine(const char *cmd)
 	if ((line_head == NULL) && (line->data != NULL)) {
 		line_head = line;
 		line->next = NULL;
-		return 0;
+		return;
 	}
 
 	curr = line_head;
@@ -104,7 +108,7 @@ static int8_t cmdd_addLine(const char *cmd)
 				}
 				ufree(curr);
 			}
-			return 0;
+			return;
 		}
 
 		if (curr->number > line->number) {
@@ -127,32 +131,30 @@ static int8_t cmdd_addLine(const char *cmd)
 		}
 		line->next = curr;
 	}
-
-	return 0;
 }
 
 int8_t cmd_parse(const char *cmd)
 {
-	int8_t err = 0;
-	struct token *tstr;
+	int8_t err;
 
-	if (isdigit(cmd[0])) {
-		err = cmdd_addLine(cmd);
-		if (err >= 0) {
+	err = setjmp(cmd_env);
+	if (!err) {
+		if (isdigit(cmd[0])) {
+			cmd_addLine(cmd);
 			err = 1; /* Supress prompt */
 		}
-	}
-	else if (strcasecmp(cmd, "list") == 0) {
-		cmd_list();
-	}
-	else if (strcasecmp(cmd, "new") == 0) {
-		cmd_new();
-	}
-	else if (strcasecmp(cmd, "run") == 0) {
-		err = intr_run(line_head);
-	}
-	else if (*cmd != '\0') {
-		err = intr_line(cmd);
+		else if (strcasecmp(cmd, "list") == 0) {
+			cmd_list();
+		}
+		else if (strcasecmp(cmd, "new") == 0) {
+			cmd_new();
+		}
+		else if (strcasecmp(cmd, "run") == 0) {
+			intr_run(line_head);
+		}
+		else if (*cmd != '\0') {
+			intr_line(cmd);
+		}
 	}
 
 	return err;

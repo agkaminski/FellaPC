@@ -51,139 +51,150 @@ struct for_elem {
 
 struct for_elem *for_stack = NULL;
 
-static int8_t intr_getVar(struct variable **var, const char *name, int8_t create)
+static struct token *token_curr;
+
+static int8_t interactive = 1;
+
+static void intr_die(int err)
 {
+	if (!interactive) {
+		char buff[8];
+		vga_puts("\nLine ");
+		itoa(line_curr, buff, 10);
+		vga_puts(buff);
+		vga_puts(": ");
+
+		intr_clean(0);
+	}
+
+	cmd_die(err);
+}
+
+static void intr_expect(enum token_type tok)
+{
+	if (tok == token_none) {
+		if (token_curr != NULL) {
+			intr_die(-EINVAL);
+		}
+	}
+	else if ((token_curr == NULL) || (token_curr->type != tok)) {
+		intr_die(-EINVAL);
+	}
+}
+
+static void intr_expectInteger(void)
+{
+	uint8_t pos = 0;
+
+	intr_expect(token_real);
+
+	while (token_curr->value[pos] != '\0') {
+		if (!isdigit(token_curr->value[pos])) {
+			intr_die(-EINVAL);
+		}
+		++pos;
+	}
+}
+
+static void intr_toktor(real *o)
+{
+	if (real_ator(token_curr->value, o) == NULL) {
+		intr_die(-ERANGE);
+	}
+}
+
+static void intr_getVar(struct variable **var, const char *name, int8_t create)
+{
+	char *vname;
+
 	(*var) = variables;
 	while ((*var) != NULL) {
 		if (strcasecmp((*var)->name, name) == 0) {
-			return 0;
+			return;
 		}
 		(*var) = (*var)->next;
 	}
 
-	if (create) {
-		char *vname;
-		(*var) = umalloc(sizeof(struct variable));
-		if ((*var) == NULL) {
-			return -ENOMEM;
-		}
-
-		vname = umalloc(strlen(name) + 1);
-		if (vname == NULL) {
-			ufree(*var);
-			return -ENOMEM;
-		}
-
-		strcpy(vname, name);
-		(*var)->name = vname;
-		memcpy(&(*var)->val, &rzero, sizeof(real));
-
-		(*var)->next = variables;
-		variables = (*var);
-
-		return 0;
+	if (!create) {
+		intr_die(-ENOENT);
 	}
 
-	return -ENOENT;
+	(*var) = umalloc(sizeof(struct variable));
+	if ((*var) == NULL) {
+		intr_die(-ENOMEM);
+	}
+
+	vname = umalloc(strlen(name) + 1);
+	if (vname == NULL) {
+		ufree(*var);
+		intr_die(-ENOMEM);
+	}
+
+	strcpy(vname, name);
+	(*var)->name = vname;
+	memcpy(&(*var)->val, &rzero, sizeof(real));
+
+	(*var)->next = variables;
+	variables = (*var);
 }
 
-static int8_t intr_collapseExp(real *o, struct token *tstr, struct token **end)
+static void intr_collapseExp(real *o)
 {
 	struct variable *var;
-	int8_t err = -EINVAL;
 
 	/* TODO */
 
-	if (tstr->type == token_var) {
-		err = intr_getVar(&var, tstr->value, 0);
-		if (err < 0) {
-			return err;
-		}
+	if (token_curr->type == token_var) {
+		intr_getVar(&var, token_curr->value, 0);
 		memcpy(o, &var->val, sizeof(*o));
 	}
-	else if (tstr->type == token_real) {
-		err = (real_ator(tstr->value, o) == NULL) ? -ERANGE : 0;
+	else if (token_curr->type == token_real) {
+		intr_toktor(o);
 	}
 
-	*end = tstr->next;
-
-	return err;
+	/* Need to eat all relevant tokens */
+	token_curr = token_curr->next;
 }
 
-static int8_t intr_isInteger(struct token *token)
-{
-	uint8_t pos = 0;
-
-	if ((token == NULL) || (token->type != token_real) || (token->value == NULL)) {
-		return 0;
-	}
-
-	while (token->value[pos] != '\0') {
-		if (!isdigit(token->value[pos])) {
-			return 0;
-		}
-		++pos;
-	}
-
-	return 1;
-}
-
-static int8_t intr_var(struct token *tstr)
+static void intr_var(void)
 {
 	struct variable *var;
-	int8_t err;
 
-	err = intr_getVar(&var, tstr->value, 1);
-	if (err < 0) {
-		return err;
-	}
+	token_curr = token_curr->prev;
 
-	if ((tstr->next == NULL) || (tstr->next->type != token_eq)) {
-		return -EINVAL;
-	}
+	intr_getVar(&var, token_curr->value, 1);
 
-	tstr = tstr->next->next;
+	token_curr = token_curr->next;
+	intr_expect(token_eq);
+	token_curr = token_curr->next;
 
-	err = intr_collapseExp(&var->val, tstr, &tstr);
-	if (err < 0) {
-		return err;
-	}
+	intr_collapseExp(&var->val);
 
-	if (tstr != NULL) {
-		return -EINVAL;
-	}
-
-	return 0;
+	intr_expect(token_none);
 }
 
-static int8_t intr_print(struct token *tstr)
+static void intr_print(void)
 {
-	int8_t first = 1, err;
+	int8_t first = 1;
 	char buff[20];
 	real r;
-	struct token *next = NULL;
 
-	tstr = tstr->next;
-
-	while (tstr != NULL) {
-		switch (tstr->type) {
+	while (token_curr != NULL) {
+		switch (token_curr->type) {
 			case token_str:
-				vga_puts(tstr->value);
+				vga_puts(token_curr->value);
 				break;
 
 			case token_real:
 			case token_var:
-				err = intr_collapseExp(&r, tstr, &next);
-				if (err < 0) {
-					return err;
-				}
+				intr_collapseExp(&r);
 				real_rtoa(buff, &r);
 				vga_puts(buff);
-				break;
+				continue;
 
 			default:
 				if (!first) {
-					switch (tstr->type) {
+					switch (token_curr->type) {
 						case token_coma:
 							vga_putc('\t');
 							break;
@@ -193,147 +204,99 @@ static int8_t intr_print(struct token *tstr)
 							break;
 
 						default:
-							return -EINVAL;
+							intr_die(-EINVAL);
 					}
 					break;
 				}
-				return -EINVAL;
+				intr_die(-EINVAL);
 		}
 
 		first = 0;
 
-		tstr = (next != NULL) ? next : tstr->next;
-		next = NULL;
+		token_curr = token_curr->next;
 	}
 
 	vga_putc('\n');
-	return 0;
 }
 
-static int8_t intr_input(struct token *tstr)
+static void intr_input(void)
 {
-	const char *prompt;
+	const char *prompt = "?";
 	struct variable *var;
-	int8_t err;
 	char cmd[81];
 
-	tstr = tstr->next;
-	if (tstr == NULL) {
-		return -EINVAL;
+	if (token_curr == NULL) {
+		intr_die(-EINVAL);
 	}
 
-	if (tstr->type == token_str) {
-		prompt = tstr->value;
+	if (token_curr->type == token_str) {
+		prompt = token_curr->value;
 
-		tstr = tstr->next;
-		if ((tstr == NULL) || (tstr->type != token_coma)) {
-			return -EINVAL;
-		}
-
-		tstr = tstr->next;
-		if (tstr == NULL) {
-			return -EINVAL;
-		}
+		token_curr = token_curr->next;
+		intr_expect(token_coma);
+		token_curr = token_curr->next;
 	}
 
-	if (tstr->type != token_var) {
-		return -EINVAL;
-	}
+	intr_expect(token_var);
+	intr_getVar(&var, token_curr->value, 1);
 
-	err = intr_getVar(&var, tstr->value, 1);
-	if (err < 0) {
-		return err;
-	}
-
-	if (tstr->next != NULL) {
-		return -EINVAL;
-	}
+	token_curr = token_curr->next;
+	intr_expect(token_none);
 
 	vga_puts(prompt);
 	vga_putc('\n');
 
 	do {
 		vga_vsync();
-		err = tty_update(cmd);
-		if (err < 0) {
-			return err;
-		}
-	} while (err <= 0);
+	} while (tty_update(cmd) <= 0);
 
 	/* TODO add strings */
 
 	real_ator(cmd, &var->val);
-
-	return 0;
 }
 
-static int8_t intr_for(struct token *tstr)
+static void intr_for(void)
 {
 	struct variable *iter;
 	struct for_elem *f;
 	real limit, step;
-	int8_t err;
 
 	memcpy(&step, &rone, sizeof(real));
 
-	tstr = tstr->next;
-	if (tstr->type != token_var) {
-		return -EINVAL;
-	}
-
-	err = intr_getVar(&iter, tstr->value, 1);
-	if (err < 0) {
-		return err;
-	}
+	intr_expect(token_var);
+	intr_getVar(&iter, token_curr->value, 1);
 
 	f = for_stack;
 	while (f != NULL) {
 		if (f->iter == iter) {
-			return -EINVAL;
+			intr_die(-EINVAL);
 		}
 		f = f->next;
 	}
 
-	tstr = tstr->next;
-	if (tstr->type != token_eq) {
-		return -EINVAL;
-	}
+	token_curr = token_curr->next;
+	intr_expect(token_eq);
 
-	tstr = tstr->next;
-	err = intr_collapseExp(&iter->val, tstr, &tstr);
-	if (err < 0) {
-		return err;
-	}
+	token_curr = token_curr->next;
+	intr_collapseExp(&iter->val);
 
-	if (tstr->type != token_to) {
-		return -EINVAL;
-	}
+	intr_expect(token_to);
 
-	tstr = tstr->next;
-	err = intr_collapseExp(&limit, tstr, &tstr);
-	if (err < 0) {
-		return err;
-	}
+	token_curr = token_curr->next;
+	intr_collapseExp(&limit);
 
-	if (tstr != NULL) {
-		if (tstr->type != token_step) {
-			return -EINVAL;
-		}
+	if (token_curr != NULL) {
+		intr_expect(token_step);
 
-		tstr = tstr->next;
-		err = intr_collapseExp(&step, tstr, &tstr);
-		if (err < 0) {
-			return err;
-		}
+		token_curr = token_curr->next;
+		intr_collapseExp(&step);
 
-		if (tstr != NULL) {
-			return -EINVAL;
-		}
+		intr_expect(token_none);
 	}
 
 	f = umalloc(sizeof(*f));
 	if (f == NULL) {
-		return -ENOMEM;
+		intr_die(-ENOMEM);
 	}
 
 	f->line = line_next;
@@ -342,36 +305,27 @@ static int8_t intr_for(struct token *tstr)
 	f->step = step;
 	f->next = for_stack;
 	for_stack = f;
-
-	return 0;
 }
 
-static int8_t intr_next(struct token *tstr)
+static void intr_next(void)
 {
 	struct variable *var;
 	struct for_elem *f = for_stack, *prev = NULL;
 	int8_t err;
 	real acc;
 
-	tstr = tstr->next;
-	if (tstr->type != token_var) {
-		return -EINVAL;
-	}
+	intr_expect(token_var);
 
-	err = intr_getVar(&var, tstr->value, 0);
-	if (err < 0) {
-		return err;
-	}
+	intr_getVar(&var, token_curr->value, 0);
 
-	if (tstr->next != NULL) {
-		return -EINVAL;
-	}
+	token_curr = token_curr->next;
+	intr_expect(token_none);
 
 	while (f != NULL) {
 		if (f->iter == var) {
 			err = real_add(&acc, &f->iter->val, &f->step);
 			if (err < 0) {
-				return err;
+				intr_die(err);
 			}
 			memcpy(&f->iter->val, &acc, sizeof(real));
 
@@ -389,92 +343,73 @@ static int8_t intr_next(struct token *tstr)
 				}
 				ufree(f);
 			}
-			return 0;
+			break;
 		}
 		prev = f;
 		f = f->next;
 	}
-
-	return -EINVAL;
 }
 
-static int8_t intr_goto(struct token *tstr)
+static void intr_goto(void)
 {
-	tstr = tstr->next;
+	intr_expectInteger();
 
-	if (!intr_isInteger(tstr) || (tstr->next != NULL)) {
-		return -EINVAL;
-	}
-
-	jump.line = atoi(tstr->value);
+	jump.line = atoi(token_curr->value);
 	jump.jump = 1;
+
+	token_curr = token_curr->next;
+	intr_expect(token_none);
 }
 
-static int8_t intr_if(struct token *tstr)
+static void intr_if(void)
 {
-	int8_t condition, err;
+	int8_t condition;
 	real c;
 
-	tstr = tstr->next;
-
-	err = intr_collapseExp(&c, tstr, &tstr);
-	if (err < 0) {
-		return -EINVAL;
-	}
-
+	intr_collapseExp(&c);
 	condition = !real_isZero(&c);
 
-	if (tstr->type != token_then) {
-		return -EINVAL;
-	}
-	tstr = tstr->next;
-	if (!intr_isInteger(tstr)) {
-		return -EINVAL;
-	}
+	intr_expect(token_then);
+
+	token_curr = token_curr->next;
+	intr_expectInteger();
 
 	if (condition) {
-		jump.line = atoi(tstr->value);
+		jump.line = atoi(token_curr->value);
 		jump.jump = 1;
-		return 0;
+		return;
 	}
 
-	if (tstr == NULL) {
-		return 0;
-	}
+	token_curr = token_curr->next;
+	if (token_curr != NULL) {
+		intr_expect(token_else);
 
-	if (tstr->type != token_else) {
-		return -1;
-	}
-	tstr = tstr->next;
-	if (!intr_isInteger(tstr) || (tstr->next != NULL)) {
-		return -EINVAL;
-	}
+		token_curr = token_curr->next;
+		intr_expectInteger();
 
-	jump.line = atoi(tstr->value);
-	jump.jump = 1;
+		jump.line = atoi(token_curr->value);
+		jump.jump = 1;
 
-	return 0;
+		token_curr = token_curr->next;
+		intr_expect(token_none);
+	}
 }
 
-static int8_t intr_dim(struct token *tstr)
+static void intr_dim(void)
 {
 	/* TODO */
-	return -ENOSYS;
+	intr_die(-ENOSYS);
 }
 
-static int8_t intr_gosub(struct token *tstr)
+static void intr_gosub(void)
 {
 	struct gosub_elem *new;
 
-	tstr = tstr->next;
-
-	if (!intr_isInteger(tstr) || (tstr->next != NULL)) {
-		return -EINVAL;
-	}
+	intr_expectInteger();
 
 	new = umalloc(sizeof(*new));
 	if (new == NULL) {
-		return -ENOMEM;
+		intr_die(-ENOMEM);
 	}
 
 	new->line = line_curr;
@@ -482,18 +417,21 @@ static int8_t intr_gosub(struct token *tstr)
 	new->prev = gosub_stack;
 	gosub_stack = new;
 
-	jump.line = atoi(tstr->value);
+	jump.line = atoi(token_curr->value);
 	jump.jump = 1;
 
-	return 0;
+	token_curr = token_curr->next;
+	intr_expect(token_none);
 }
 
-static int8_t intr_return(struct token *tstr)
+static void intr_return(void)
 {
 	struct gosub_elem *elem = gosub_stack;
 
-	if ((tstr->next != NULL) || (elem == NULL)) {
-		return -EINVAL;
+	intr_expect(token_none);
+
+	if (elem == NULL) {
+		intr_die(-EINVAL);
 	}
 
 	jump.line = elem->line;
@@ -503,15 +441,11 @@ static int8_t intr_return(struct token *tstr)
 	ufree(elem);
 }
 
-static int8_t intr_clear(struct token *tstr)
+static void intr_clear(void)
 {
-	if (tstr->next != NULL) {
-		return -EINVAL;
-	}
+	intr_expect(token_none);
 
 	vga_clear();
-
-	return 0;
 }
 
 void intr_clean(int8_t hard)
@@ -538,13 +472,16 @@ void intr_clean(int8_t hard)
 			ufree(victim);
 		}
 	}
+
+	line_curr = 0;
+	interactive = 1;
 }
 
-int8_t intr_line(const char *line)
+void intr_line(const char *line)
 {
 	int8_t err;
 	struct token *tstr;
-	static int8_t (*const entry[])(struct token *) = {
+	static void (*const entry[])(void) = {
 		intr_var,
 		intr_print,
 		intr_input,
@@ -559,22 +496,27 @@ int8_t intr_line(const char *line)
 	};
 
 	err = token_tokenize(&tstr, line);
-	if (err >= 0) {
-		err = -EINVAL;
-		if (tstr->type < (sizeof(entry) / sizeof(*entry))) {
-			err = entry[tstr->type](tstr);
-		}
+	if (err < 0) {
+		intr_die(err);
 	}
 
-	token_free(tstr);
+	if (tstr->type >= (sizeof(entry) / sizeof(*entry))) {
+		token_free(tstr);
+		intr_die(-EINVAL);
+	}
 
-	return err;
+	token_curr = tstr->next;
+
+	entry[tstr->type]();
+
+	token_free(tstr);
 }
 
-int8_t intr_run(struct line *start)
+void intr_run(struct line *start)
 {
 	struct line *curr = start;
-	int8_t err = 0;
+
+	interactive = 0;
 
 	while (curr != NULL) {
 		if (keyboard_scan() >= 0) {
@@ -586,10 +528,7 @@ int8_t intr_run(struct line *start)
 		line_curr = curr->number;
 		line_next = (curr->next != NULL) ? curr->next->number : 0xffffu;
 
-		err = intr_line(curr->data);
-		if (err < 0) {
-			break;
-		}
+		intr_line(curr->data);
 
 		if (jump.jump) {
 			jump.jump = 0;
@@ -604,14 +543,4 @@ int8_t intr_run(struct line *start)
 	}
 
 	intr_clean(0);
-
-	if (err < 0) {
-		char buff[8];
-		vga_puts("Line ");
-		itoa(line_curr, buff, 10);
-		vga_puts(buff);
-		vga_puts(": ");
-	}
-
-	return err;
 }
