@@ -88,10 +88,17 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 
 		/* Cut the token */
 
-		while (isalnum(line[pos]) || (line[pos] == '$') ||
-				(line[pos] == '.') || (isstr && (line[pos] == ' '))) {
+		while (line[pos] != '\0') {
 			if (isreal && !isdigit(line[pos]) && (line[pos] != '.')) {
 				return -EINVAL;
+			}
+			else if (isstr) {
+				if (line[pos] == '\"') {
+					break;
+				}
+			}
+			else if (!isalnum(line[pos]) && (line[pos] != '$')) {
+				break;
 			}
 
 			++pos;
