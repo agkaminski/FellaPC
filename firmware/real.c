@@ -106,6 +106,13 @@ void real_rtoa(char *buff, const real *r)
 	}
 }
 
+int real_rtoi(const real *r)
+{
+	char buff[PRECISION + 1 + 1 + 5 + 1]; /* sign, dot, exponent, null term */
+	real_rtoa(buff, r);
+	return atoi(buff);
+}
+
 const char *real_ator(const char *buff, real *r)
 {
 	int8_t dot = 0, mpos;
