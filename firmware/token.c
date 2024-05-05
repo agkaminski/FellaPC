@@ -76,7 +76,7 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 			++pos;
 		}
 
-		isreal = isdigit(line[pos]);
+		isreal = (isdigit(line[pos])) || (line[pos] == '.');
 
 		if (line[pos] == '\"') {
 			isstr = 1;
@@ -91,11 +91,13 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 		/* Cut the token */
 
 		while (line[pos] != '\0') {
-			if (isreal && !isdigit(line[pos]) && (line[pos] != '.')) {
-				if ((line[pos] == ' ') || (line[pos] == '\t')) {
+			if (isreal) {
+				if (!isdigit(line[pos]) && (line[pos] != '.')) {
+					if (isalpha(line[pos])) {
+						return -EINVAL;
+					}
 					break;
 				}
-				return -EINVAL;
 			}
 			else if (isstr) {
 				if (line[pos] == '\"') {
