@@ -57,11 +57,9 @@ cursor_state:	.res 1, $0
 
 .endproc
 
-.proc			_vga_setRowCol: near
+.proc			_vga_setCol: near
 
 				JSR _vga_vsync
-				LDA _g_cursor_row
-				STA VROW
 				LDA	_g_cursor_col
 				STA VCOL
 				RTS
@@ -81,7 +79,7 @@ cursor_state:	.res 1, $0
 				STA cursor_prev
 				LDX #CURSOR
 				STX cursor_state
-				JSR _vga_setRowCol
+				JSR _vga_setCol
 				STX VDATA
 				RTS
 
@@ -129,6 +127,9 @@ cursor_state:	.res 1, $0
 				BPL @col_loop
 				DEY
 				BPL @row_loop
+
+				LDA #0
+				STA VROW
 
 				RTS
 .endproc
@@ -194,6 +195,9 @@ cursor_state:	.res 1, $0
 				BEQ _vga_scroll
 
 @addrow:		INC _g_cursor_row
+				JSR _vga_vsync
+				LDA _g_cursor_row
+				STA VROW
 				RTS
 
 .endproc
@@ -248,7 +252,7 @@ cursor_state:	.res 1, $0
 				STA ptr1
 				STX ptr1 + 1
 
-				JSR _vga_setRowCol
+				JSR _vga_setCol
 				LDX _g_cursor_col
 
 				LDY #0
@@ -269,7 +273,7 @@ cursor_state:	.res 1, $0
 .proc			_vga_set: near
 
 				TAX
-				JSR _vga_setRowCol
+				JSR _vga_setCol
 				STX VDATA
 				STX cursor_prev
 				RTS
@@ -284,7 +288,7 @@ cursor_state:	.res 1, $0
 				LDA cursor_prev
 				RTS
 
-@hwaccess:		JSR _vga_setRowCol
+@hwaccess:		JSR _vga_setCol
 				LDA VDATA
 				RTS
 
@@ -296,7 +300,7 @@ cursor_state:	.res 1, $0
 				STX ptr1 + 1
 
 				JSR _vga_resetCursor
-				JSR _vga_setRowCol
+				JSR _vga_setCol
 
 				LDY #0
 @loop:			LDA (ptr1), Y
@@ -323,7 +327,7 @@ cursor_state:	.res 1, $0
 
 @putc:			STY tmp2
 				JSR _vga_putc
-				JSR _vga_setRowCol
+				JSR _vga_setCol
 				LDY tmp2
 				JMP @loop
 
