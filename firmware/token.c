@@ -230,6 +230,7 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 			curr->type = (enum token_type)line[pos];
 			if (((curr->type == token_lt) || (curr->type == token_gt)) && (line[pos + 1] == '=')) {
 				curr->type += 10;
+				++pos;
 			}
 			++pos;
 		}

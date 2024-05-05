@@ -279,19 +279,68 @@ static void intr_collapseExp(real *o)
 			token_push(&rpn_stack, tok);
 		}
 		else { /* Operation */
-			if (tok->type == token_plus) {
-				struct token *a, *b;
-				real r;
+			struct token *a, *b;
+			real r;
+			int8_t cmp;
 
-				b = rpn_stack;
-				token_pop(&rpn_stack, b);
-				a = rpn_stack;
+			b = rpn_stack;
+			token_pop(&rpn_stack, b);
+			a = rpn_stack;
 
-				real_add(&r, &a->value, &b->value);
+			switch (tok->type) {
+				case token_mod:
+					/* TODO */
+					intr_die(-ENOSYS);
+					break;
 
-				memcpy(&a->value, &r, sizeof(r));
-				ufree(b);
+				case token_mul:
+					real_mul(&r, &a->value, &b->value);
+					break;
+
+				case token_plus:
+					real_add(&r, &a->value, &b->value);
+					break;
+
+				case token_minus:
+					break;
+
+				case token_div:
+					real_div(&r, &a->value, &b->value);
+					break;
+
+				/* TODO functions here */
+
+				default: /* Comparisions */
+					/* FIXME not really working */
+					cmp = real_compare(&b->value, &a->value);
+					switch (tok->type) {
+						case token_lt:
+							cmp = (cmp < 0);
+							break;
+
+						case token_lteq:
+							cmp = (cmp <= 0);
+							break;
+
+						case token_gt:
+							cmp = (cmp > 0);
+							break;
+
+						case token_gteq:
+							cmp = (cmp >= 0);
+							break;
+
+						case token_eq:
+							cmp = (cmp == 0);
+							break;
+					}
+
+					memcpy(&r, cmp ? &rone : &rzero, sizeof(r));
+					break;
 			}
+
+			memcpy(&a->value, &r, sizeof(r));
+			ufree(b);
 		}
 	}
 
@@ -467,8 +516,7 @@ static void intr_next(void)
 			}
 			memcpy(&f->iter->val, &acc, sizeof(real));
 
-			err = real_sub(&acc, &f->limit, &f->iter->val);
-			if (real_isZero(&acc) || (acc.s < 0)) {
+			if (real_compare(&f->limit, &f->iter->val) <= 0) {
 				if (prev != NULL) {
 					prev->next = f->next;
 				}

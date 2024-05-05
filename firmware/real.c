@@ -339,3 +339,30 @@ int8_t real_div(real *o, const real *a, const real *b)
 
 	return 0;
 }
+
+int8_t real_compare(const real *a, const real *b)
+{
+	real x, y, t;
+
+	memcpy(&x, a, sizeof(x));
+	memcpy(&y, b, sizeof(y));
+
+	if (a->s != b->s) {
+		return (a->s > 0) ? 1 : -1;
+	}
+
+	x.s = 1;
+	y.s = 1;
+
+	real_sub(&t, &x, &y);
+
+	if (real_isZero(&t)) {
+		return 0;
+	}
+
+	if (x.s < 0) {
+		return (a->s > 0) ? -1 : 1;
+	}
+
+	return a->s;
+}
