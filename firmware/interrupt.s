@@ -28,15 +28,15 @@ _g_vsync:		.res 1
 				PHA
 				CLD
 
+				; Set vsync flag
+				LDA #$FF
+				STA _g_vsync
+
 				; Check for BRK
 				TSX
 				LDA $0104, X
 				AND #$10
 				BNE _break
-
-				; Set vsync flag
-				LDA $FF
-				STA _g_vsync
 
 				; Refresh DRAM
 				JSR _dram_refresh
