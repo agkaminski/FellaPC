@@ -181,11 +181,10 @@ static void intr_shuntingYard(void)
 
 	struct token *curr, *t;
 
-	while ((token_curr != NULL) && (
-			(token_curr->type == token_var) ||
+	while ((token_curr != NULL) && (token_curr->type != token_semicol) &&
+			((token_curr->type == token_var) ||
 			(token_curr->type == token_real) ||
-			(token_curr->type >= TOKEN_OPERATOR_START) &&
-			(token_curr->type != token_semicol))) {
+			(token_curr->type >= TOKEN_OPERATOR_START))) {
 
 		curr = token_curr;
 		token_curr = token_curr->next;
@@ -263,6 +262,12 @@ static void intr_shuntingYard(void)
 		token_append(&rpn_output, t);
 	}
 }
+static void intr_assertStackNotEmpty(void)
+{
+	if (rpn_stack == NULL) {
+		intr_die(-EINVAL);
+	}
+}
 
 static void intr_collapseExp(real *o)
 {
@@ -285,83 +290,81 @@ static void intr_collapseExp(real *o)
 		else if (tok->type == token_real) {
 			token_push(&rpn_stack, tok);
 		}
-		else { /* Operation */
-			struct token *a, *b;
-			real r;
-			int8_t cmp, unary = 0;
-
-			b = rpn_stack;
-			token_pop(&rpn_stack, b);
-			a = rpn_stack;
-
-			switch (tok->type) {
-				case token_mod:
-					/* TODO */
-					intr_die(-ENOSYS);
-					break;
-
-				case token_mul:
-					real_mul(&r, &a->value, &b->value);
-					break;
-
-				case token_plus:
-					real_add(&r, &a->value, &b->value);
-					break;
-
-				case token_minus:
-					real_sub(&r, &a->value, &b->value);
-					break;
-
-				case token_div:
-					real_div(&r, &a->value, &b->value);
-					break;
-
-				/* FIXME -2+3=-5 */
-				case token_negative:
-					unary = 1;
-					if (b->type == token_real) {
-						b->value.s = -b->value.s;
-						token_push(&rpn_stack, b);
-					}
-					break;
-
-				/* TODO functions here */
-
-				default: /* Comparisions */
-					/* FIXME not really working */
-					cmp = real_compare(&a->value, &b->value);
-					switch (tok->type) {
-						case token_lt:
-							cmp = (cmp < 0);
-							break;
-
-						case token_lteq:
-							cmp = (cmp <= 0);
-							break;
-
-						case token_gt:
-							cmp = (cmp > 0);
-							break;
-
-						case token_gteq:
-							cmp = (cmp >= 0);
-							break;
-
-						case token_eq:
-							cmp = (cmp == 0);
-							break;
-					}
-
-					memcpy(&r, cmp ? &rone : &rzero, sizeof(r));
-					break;
+		else {
+			if (tok->type == token_negative) {
+				intr_assertStackNotEmpty();
+				rpn_stack->value.s = -rpn_stack->value.s;
 			}
+			else { /* Binary operations */
+				struct token *a, *b;
+				real r;
+				int8_t cmp;
 
-			if (unary) {
-				continue;
+				intr_assertStackNotEmpty();
+				b = rpn_stack;
+
+				token_pop(&rpn_stack, b);
+
+				intr_assertStackNotEmpty();
+				a = rpn_stack;
+
+				switch (tok->type) {
+					case token_mod:
+						/* TODO */
+						intr_die(-ENOSYS);
+						break;
+
+					case token_mul:
+						real_mul(&r, &a->value, &b->value);
+						break;
+
+					case token_plus:
+						real_add(&r, &a->value, &b->value);
+						break;
+
+					case token_minus:
+						real_sub(&r, &a->value, &b->value);
+						break;
+
+					case token_div:
+						real_div(&r, &a->value, &b->value);
+						break;
+
+					/* TODO functions here */
+
+					default: /* Comparisions */
+						/* FIXME not really working */
+						cmp = real_compare(&a->value, &b->value);
+						switch (tok->type) {
+							case token_lt:
+								cmp = (cmp < 0);
+								break;
+
+							case token_lteq:
+								cmp = (cmp <= 0);
+								break;
+
+							case token_gt:
+								cmp = (cmp > 0);
+								break;
+
+							case token_gteq:
+								cmp = (cmp >= 0);
+								break;
+
+							case token_eq:
+								cmp = (cmp == 0);
+								break;
+						}
+
+						memcpy(&r, cmp ? &rone : &rzero, sizeof(r));
+						break;
+				}
+
+				memcpy(&a->value, &r, sizeof(r));
+				ufree(b);
 			}
-
-			memcpy(&a->value, &r, sizeof(r));
-			ufree(b);
+			ufree(tok);
 		}
 	}
 

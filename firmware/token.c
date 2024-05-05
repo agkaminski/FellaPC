@@ -233,7 +233,7 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 				++pos;
 			}
 
-			if ((curr->type = token_minus) &&
+			if ((curr->type == token_minus) &&
 					((prev == NULL) || ((prev->type != token_var) && (prev->type != token_real)))) {
 				curr->type = token_negative;
 			}
