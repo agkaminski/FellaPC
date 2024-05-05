@@ -150,6 +150,10 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 			/* Operators. Just convert to token and hope for the best.
 			 * Invalid token should be get by the interpreter, so
 			 * theoretically it's 100% ok */
+			if ((line[pos] < '%') || (line[pos] > '>')) {
+				token_free(first);
+				return -EINVAL;
+			}
 			curr->type = (enum token_type)line[pos];
 			if (((curr->type == token_lt) || (curr->type == token_gt)) && (line[pos + 1] == '=')) {
 				curr->type += 10;

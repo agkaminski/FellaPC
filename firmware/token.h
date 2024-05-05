@@ -37,6 +37,14 @@ enum token_type {
 	token_then,
 	token_else,
 
+	/* Array operators */
+	token_len,
+	token_chr,
+	token_mid,
+	token_left,
+	token_right,
+	token_asc,
+
 	/* Functions */
 	token_abs,
 	token_and,
@@ -52,12 +60,6 @@ enum token_type {
 	token_sin,
 	token_sqr,
 	token_tan,
-	token_len,
-	token_chr,
-	token_mid,
-	token_left,
-	token_right,
-	token_asc,
 
 	/* Operators */
 	token_plus = '+',
