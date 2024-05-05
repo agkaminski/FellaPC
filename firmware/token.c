@@ -114,7 +114,7 @@ void token_free(struct token **first)
 int8_t token_tokenize(struct token **tstr, const char *line)
 {
 	uint8_t pos = 0, start, isreal, isstr;
-	struct token *first = NULL, *curr;
+	struct token *first = NULL, *curr, *prev = NULL;
 
 	while (line[pos] != '\0') {
 		while ((line[pos] == ' ') || (line[pos] == '\t')) {
@@ -232,10 +232,16 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 				curr->type += 10;
 				++pos;
 			}
+
+			if ((curr->type = token_minus) &&
+					((prev == NULL) || ((prev->type != token_var) && (prev->type != token_real)))) {
+				curr->type = token_negative;
+			}
 			++pos;
 		}
 
 		token_append(&first, curr);
+		prev = curr;
 	}
 
 	*tstr = first;

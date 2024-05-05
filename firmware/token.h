@@ -65,6 +65,7 @@ enum token_type {
 	token_gt = '>',
 	token_lteq = token_lt + 10,
 	token_gteq = token_gt + 10,
+	token_negative,
 
 	/* Functions */
 	token_abs = TOKEN_FUNCTION_START,

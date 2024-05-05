@@ -148,6 +148,9 @@ static struct variable *intr_getTokVar(void)
 static uint8_t intr_opPrecedence(enum token_type type)
 {
 	switch (type) {
+		case token_negative:
+			return 100;
+
 		case token_mul:
 		case token_div:
 		case token_mod:
@@ -236,8 +239,12 @@ static void intr_shuntingYard(void)
 			}
 		}
 		else { /* Operator */
-			while ((rpn_opstack != NULL) && (rpn_opstack->type != token_lpara) &&
-					(intr_opPrecedence(rpn_opstack->type) >= intr_opPrecedence(curr->type))) {
+			while ((rpn_opstack != NULL) && (rpn_opstack->type != token_lpara)) {
+				int8_t precedence = intr_opPrecedence(rpn_opstack->type) - intr_opPrecedence(curr->type);
+				if ((precedence < 0) || (!precedence && (curr->type == token_negative))) {
+					break;
+				}
+
 				t = rpn_opstack;
 				token_pop(&rpn_opstack, t);
 				token_append(&rpn_output, t);
@@ -281,7 +288,7 @@ static void intr_collapseExp(real *o)
 		else { /* Operation */
 			struct token *a, *b;
 			real r;
-			int8_t cmp;
+			int8_t cmp, unary = 0;
 
 			b = rpn_stack;
 			token_pop(&rpn_stack, b);
@@ -302,17 +309,27 @@ static void intr_collapseExp(real *o)
 					break;
 
 				case token_minus:
+					real_sub(&r, &a->value, &b->value);
 					break;
 
 				case token_div:
 					real_div(&r, &a->value, &b->value);
 					break;
 
+				/* FIXME -2+3=-5 */
+				case token_negative:
+					unary = 1;
+					if (b->type == token_real) {
+						b->value.s = -b->value.s;
+						token_push(&rpn_stack, b);
+					}
+					break;
+
 				/* TODO functions here */
 
 				default: /* Comparisions */
 					/* FIXME not really working */
-					cmp = real_compare(&b->value, &a->value);
+					cmp = real_compare(&a->value, &b->value);
 					switch (tok->type) {
 						case token_lt:
 							cmp = (cmp < 0);
@@ -337,6 +354,10 @@ static void intr_collapseExp(real *o)
 
 					memcpy(&r, cmp ? &rone : &rzero, sizeof(r));
 					break;
+			}
+
+			if (unary) {
+				continue;
 			}
 
 			memcpy(&a->value, &r, sizeof(r));
@@ -382,6 +403,7 @@ static void intr_print(void)
 
 			case token_real:
 			case token_var:
+			case token_negative:
 				intr_collapseExp(&r);
 				real_rtoa(buff, &r);
 				vga_puts(buff);
