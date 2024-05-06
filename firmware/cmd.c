@@ -59,7 +59,8 @@ static void cmd_addLine(const char *cmd)
 {
 	/* strtoul would be much better, but can't afford it */
 	int number = atoi(cmd);
-	struct line *line, *prev, *curr;
+	struct line *line = NULL, *prev, *curr;
+	size_t len;
 
 	if (number < 0) {
 		cmd_die(-ERANGE);
@@ -69,43 +70,35 @@ static void cmd_addLine(const char *cmd)
 		++cmd;
 	}
 
-	line = umalloc(sizeof(*line));
-	if (line == NULL) {
-		cmd_die(-ENOMEM);
-	}
+	len = strlen(cmd);
 
-	line->data = NULL;
-	if (*cmd != '\0') {
-		line->data = umalloc(strlen(cmd) + 1);
-		if (line->data == NULL) {
-			ufree(line);
+	if (len) {
+		line = umalloc(sizeof(*line) + len + 1);
+		if (line == NULL) {
 			cmd_die(-ENOMEM);
 		}
 		strcpy(line->data, cmd);
+		line->number = number;
 	}
-
-	line->number = number;
 
 	curr = line_head;
 	prev = NULL;
 
 	while (curr != NULL) {
-		if (curr->number == line->number) {
-			ufree(curr->data);
-			curr->data = line->data;
-			if (line->data == NULL) {
-				if (prev != NULL) {
-					prev->next = curr->next;
-				}
-				else {
-					line_head = curr->next;
-				}
-				ufree(curr);
+		if (curr->number == number) {
+			struct line *next = curr->next;
+			if (prev != NULL) {
+				prev->next = curr->next;
 			}
-			return;
+			else {
+				line_head = curr->next;
+			}
+			ufree(curr);
+			curr = next;
+			break;
 		}
 
-		if (curr->number > line->number) {
+		if (curr->number > number) {
 			break;
 		}
 
@@ -113,10 +106,7 @@ static void cmd_addLine(const char *cmd)
 		curr = curr->next;
 	}
 
-	if (line->data == NULL) {
-		ufree(line);
-	}
-	else {
+	if (line != NULL) {
 		if (prev != NULL) {
 			prev->next = line;
 		}

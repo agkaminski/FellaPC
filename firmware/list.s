@@ -2,7 +2,7 @@
 ; A.K. 2024
 
 .importzp		sp, ptr1, ptr2, ptr3
-.import			__ptrPrologue, __2ptrPrologue, __indPrologue
+.import			__2ptrPrologue, __indPrologue
 
 .export			__list_push, __list_append, __list_pop
 
