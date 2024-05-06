@@ -80,6 +80,13 @@ static void intr_die(int err)
 	cmd_die(err);
 }
 
+static void intr_assertNotNull(void *ptr)
+{
+	if (ptr == NULL) {
+		intr_die(-EINVAL);
+	}
+}
+
 static void *intr_malloc(uint8_t size)
 {
 	void *ret = umalloc(size);
@@ -199,9 +206,7 @@ static void intr_shuntingYard(void)
 		else if (curr->type == token_coma) {
 			while (1) {
 				t = rpn_opstack;
-				if (t == NULL) {
-					intr_die(-EINVAL);
-				}
+				intr_assertNotNull(t);
 
 				if (t->type == token_lpara) {
 					break;
@@ -216,9 +221,7 @@ static void intr_shuntingYard(void)
 		else if (curr->type == token_rpara) {
 			while (1) {
 				t = rpn_opstack;
-				if (t == NULL) {
-					intr_die(-EINVAL);
-				}
+				intr_assertNotNull(t);
 
 				token_pop(&rpn_opstack, t);
 				if (t->type == token_lpara) {
@@ -262,12 +265,6 @@ static void intr_shuntingYard(void)
 		token_append(&rpn_output, t);
 	}
 }
-static void intr_assertStackNotEmpty(void)
-{
-	if (rpn_stack == NULL) {
-		intr_die(-EINVAL);
-	}
-}
 
 static void intr_collapseExp(real *o)
 {
@@ -292,7 +289,7 @@ static void intr_collapseExp(real *o)
 		}
 		else {
 			if (tok->type == token_negative) {
-				intr_assertStackNotEmpty();
+				intr_assertNotNull(rpn_stack);
 				rpn_stack->value.s = -rpn_stack->value.s;
 			}
 			else { /* Binary operations */
@@ -300,12 +297,12 @@ static void intr_collapseExp(real *o)
 				real r;
 				int8_t cmp;
 
-				intr_assertStackNotEmpty();
+				intr_assertNotNull(rpn_stack);
 				b = rpn_stack;
 
 				token_pop(&rpn_stack, b);
 
-				intr_assertStackNotEmpty();
+				intr_assertNotNull(rpn_stack);
 				a = rpn_stack;
 
 				switch (tok->type) {
@@ -445,9 +442,7 @@ static void intr_input(void)
 	struct variable *var;
 	char cmd[81];
 
-	if (token_curr == NULL) {
-		intr_die(-EINVAL);
-	}
+	intr_assertNotNull(token_curr);
 
 	if (token_curr->type == token_str) {
 		prompt = token_curr->str;
@@ -554,11 +549,13 @@ static void intr_next(void)
 				jump.line = f->line;
 				jump.jump = 1;
 			}
-			break;
+			return;
 		}
 		prev = f;
 		f = f->next;
 	}
+
+	intr_die(-EINVAL);
 }
 
 static void intr_goto(void)
@@ -631,9 +628,7 @@ static void intr_return(void)
 
 	intr_expect(token_none);
 
-	if (elem == NULL) {
-		intr_die(-EINVAL);
-	}
+	intr_assertNotNull(elem);
 
 	jump.line = elem->line;
 	jump.jump = 1;
@@ -738,9 +733,7 @@ void intr_run(struct line *start)
 				curr = curr->next;
 			}
 
-			if (curr == NULL) {
-				intr_die(-EINVAL);
-			}
+			intr_assertNotNull(curr);
 		}
 		else {
 			curr = curr->next;

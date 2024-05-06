@@ -60,6 +60,9 @@ void token_push(struct token **queue, struct token *t)
 {
 	t->prev = NULL;
 	t->next = (*queue);
+	if ((*queue) != NULL) {
+		(*queue)->prev = t;
+	}
 	(*queue) = t;
 }
 
