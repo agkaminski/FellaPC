@@ -38,8 +38,8 @@ struct gosub_elem *gosub_stack = NULL;
 struct variable {
 	struct variable *next;
 	struct variable *prev;
-	const char *name;
 	real val;
+	const char name[];
 };
 
 static struct variable *variables = NULL;
@@ -137,11 +137,9 @@ static struct variable *intr_getVar(const char *name, int8_t create)
 		intr_die(-ENOENT);
 	}
 
-	var = intr_malloc(sizeof(struct variable));
-	vname = intr_malloc(strlen(name) + 1);
+	var = intr_malloc(sizeof(struct variable) + strlen(name) + 1);
+	strcpy((char *)var->name, name);
 
-	strcpy(vname, name);
-	var->name = vname;
 	memcpy(&var->val, &rzero, sizeof(real));
 
 	list_push(&variables, var);
@@ -660,7 +658,6 @@ void intr_clean(int8_t hard)
 		while (variables != NULL) {
 			struct variable *victim = variables;
 			variables = victim->next;
-			ufree(victim->name);
 			ufree(victim);
 		}
 	}
