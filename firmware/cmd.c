@@ -86,12 +86,6 @@ static void cmd_addLine(const char *cmd)
 
 	line->number = number;
 
-	if ((line_head == NULL) && (line->data != NULL)) {
-		line_head = line;
-		line->next = NULL;
-		return;
-	}
-
 	curr = line_head;
 	prev = NULL;
 
