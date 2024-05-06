@@ -13,6 +13,7 @@
 #include "token.h"
 #include "ualloc/ualloc.h"
 #include "real.h"
+#include "list.h"
 
 static const struct {
 	const char *str;
@@ -55,52 +56,6 @@ static const struct {
 	{ "peek", token_peek },
 	{ "poke", token_poke }
 };
-
-void token_push(struct token **queue, struct token *t)
-{
-	t->prev = NULL;
-	t->next = (*queue);
-	if ((*queue) != NULL) {
-		(*queue)->prev = t;
-	}
-	(*queue) = t;
-}
-
-void token_append(struct token **queue, struct token *t)
-{
-	struct token *head = *queue;
-
-	if ((*queue) == NULL) {
-		token_push(queue, t);
-	}
-	else {
-		while (head->next != NULL) {
-			head = head->next;
-		}
-
-		head->next = t;
-		t->prev = head;
-		t->next = NULL;
-	}
-}
-
-void token_pop(struct token **queue, struct token *t)
-{
-	if (t == (*queue)) {
-		(*queue) = t->next;
-	}
-
-	if (t->next != NULL) {
-		t->next->prev = t->prev;
-	}
-
-	if (t->prev != NULL) {
-		t->prev->next = t->next;
-	}
-
-	t->next = NULL;
-	t->prev = NULL;
-}
 
 void token_free(struct token **first)
 {
@@ -243,7 +198,7 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 			++pos;
 		}
 
-		token_append(&first, curr);
+		list_append(&first, curr);
 		prev = curr;
 	}
 

@@ -5,7 +5,7 @@ TARGET = $(addsuffix .bin, ${GOAL})
 GHASH = "$(shell git describe --always --dirty)"
 OBJ = main.o dram.o interrupt.o vga.o keyboard.o keyboard_low.o tty.o \
 cmd.o real.o real_asm.o ualloc/ualloc_init.o ualloc/umalloc.o ualloc/ufree.o \
-token.o interpreter.o
+token.o interpreter.o list.o helper.o
 
 .PHONY: clean
 .PRECIOUS: %.asm

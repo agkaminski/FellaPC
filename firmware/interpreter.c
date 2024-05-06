@@ -17,6 +17,7 @@
 #include "real.h"
 #include "keyboard.h"
 #include "tty.h"
+#include "list.h"
 
 static int line_curr;
 static int line_next;
@@ -195,13 +196,13 @@ static void intr_shuntingYard(void)
 
 		curr = token_curr;
 		token_curr = token_curr->next;
-		token_pop(NULL, curr); /* NULL's ok, never first element */
+		list_pop(NULL, curr); /* NULL's ok, never first element */
 
 		if ((curr->type == token_real) || (curr->type == token_var)) {
-			token_append(&rpn_output, curr);
+			list_append(&rpn_output, curr);
 		}
 		else if ((curr->type == token_lpara) || (curr->type >= TOKEN_FUNCTION_START)) {
-			token_push(&rpn_opstack, curr);
+			list_push(&rpn_opstack, curr);
 		}
 		else if (curr->type == token_coma) {
 			while (1) {
@@ -212,8 +213,8 @@ static void intr_shuntingYard(void)
 					break;
 				}
 
-				token_pop(&rpn_opstack, t);
-				token_append(&rpn_output, t);
+				list_pop(&rpn_opstack, t);
+				list_append(&rpn_output, t);
 			}
 
 			ufree(curr);
@@ -223,12 +224,12 @@ static void intr_shuntingYard(void)
 				t = rpn_opstack;
 				intr_assertNotNull(t);
 
-				token_pop(&rpn_opstack, t);
+				list_pop(&rpn_opstack, t);
 				if (t->type == token_lpara) {
 					break;
 				}
 
-				token_append(&rpn_output, t);
+				list_append(&rpn_output, t);
 			}
 
 			/* Discard left parenthesis */
@@ -236,8 +237,8 @@ static void intr_shuntingYard(void)
 
 			t = rpn_opstack;
 			if ((t != NULL) && (t->type >= TOKEN_FUNCTION_START)) {
-				token_pop(&rpn_opstack, t);
-				token_append(&rpn_output, t);
+				list_pop(&rpn_opstack, t);
+				list_append(&rpn_output, t);
 			}
 		}
 		else { /* Operator */
@@ -248,11 +249,11 @@ static void intr_shuntingYard(void)
 				}
 
 				t = rpn_opstack;
-				token_pop(&rpn_opstack, t);
-				token_append(&rpn_output, t);
+				list_pop(&rpn_opstack, t);
+				list_append(&rpn_output, t);
 			}
 
-			token_push(&rpn_opstack, curr);
+			list_push(&rpn_opstack, curr);
 		}
 	}
 
@@ -261,8 +262,8 @@ static void intr_shuntingYard(void)
 		if (t->type == token_lpara) {
 			intr_die(-EINVAL);
 		}
-		token_pop(&rpn_opstack, t);
-		token_append(&rpn_output, t);
+		list_pop(&rpn_opstack, t);
+		list_append(&rpn_output, t);
 	}
 }
 
@@ -274,7 +275,7 @@ static void intr_collapseExp(real *o)
 
 	while (rpn_output != NULL) {
 		struct token *tok = rpn_output;
-		token_pop(&rpn_output, tok);
+		list_pop(&rpn_output, tok);
 
 		if (tok->type == token_var) {
 			struct variable *var = intr_getVar(tok->str, 0);
@@ -282,10 +283,10 @@ static void intr_collapseExp(real *o)
 			memcpy(&tok->value, &var->val, sizeof(tok->value));
 			ufree(tok->str);
 			tok->str = NULL;
-			token_push(&rpn_stack, tok);
+			list_push(&rpn_stack, tok);
 		}
 		else if (tok->type == token_real) {
-			token_push(&rpn_stack, tok);
+			list_push(&rpn_stack, tok);
 		}
 		else {
 			if (tok->type == token_negative) {
@@ -300,7 +301,7 @@ static void intr_collapseExp(real *o)
 				intr_assertNotNull(rpn_stack);
 				b = rpn_stack;
 
-				token_pop(&rpn_stack, b);
+				list_pop(&rpn_stack, b);
 
 				intr_assertNotNull(rpn_stack);
 				a = rpn_stack;

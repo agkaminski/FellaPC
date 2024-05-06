@@ -11,36 +11,13 @@
 
 .importzp		sp, ptr1, ptr2, tmp1, tmp2
 
+.import			__ptrPrologue, __2ptrPrologue
+
 .segment		"CODE"
-
-.proc			_real_ptrPrologue: near
-
-				STA ptr1
-				STX ptr1 + 1
-				LDY #0
-				LDX #0
-				RTS
-
-.endproc
-
-.proc			_real_2ptrPrologue: near
-
-				JSR _real_ptrPrologue
-				LDA (sp), Y
-				STA ptr2
-				INY
-				LDA (sp), Y
-				STA ptr2 + 1
-				DEY
-				INC sp
-				INC sp
-				RTS
-
-.endproc
 
 .proc			__real_bcdAdd: near
 
-				JSR _real_2ptrPrologue
+				JSR __2ptrPrologue
 
 				SED
 				CLC
@@ -67,7 +44,7 @@
 
 .proc			__real_bcdSub: near
 
-				JSR _real_2ptrPrologue
+				JSR __2ptrPrologue
 
 				SED
 				SEC
@@ -90,7 +67,7 @@
 
 .proc			_real_isZero: near
 
-				JSR _real_ptrPrologue
+				JSR __ptrPrologue
 
 @loop:			LDA (ptr1), Y
 				BNE @nope
@@ -107,7 +84,7 @@
 
 .proc			_real_shiftLeft: near
 
-				JSR _real_ptrPrologue
+				JSR __ptrPrologue
 
 @loop:			LDY #0
 				PHP
@@ -133,7 +110,7 @@
 
 .proc			_real_shiftRight: near
 
-				JSR _real_ptrPrologue
+				JSR __ptrPrologue
 
 @loop:			LDY #4
 				CLC
@@ -154,7 +131,7 @@
 
 .proc			_real_cmp: near
 
-				JSR _real_2ptrPrologue
+				JSR __2ptrPrologue
 
 				LDY #4
 
