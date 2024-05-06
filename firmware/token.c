@@ -57,18 +57,6 @@ static const struct {
 	{ "poke", token_poke }
 };
 
-void token_free(struct token **first)
-{
-	struct token *victim;
-
-	while ((*first) != NULL) {
-		victim = (*first);
-		(*first) = (*first)->next;
-		ufree(victim->str);
-		ufree(victim);
-	}
-}
-
 int8_t token_tokenize(struct token **tstr, const char *line)
 {
 	uint8_t pos = 0, start, isreal, isstr;
@@ -118,24 +106,15 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 			return -EINVAL;
 		}
 
-		curr = umalloc(sizeof(*curr));
+		curr = umalloc(sizeof(*curr) + pos - start + 1);
 		if (curr == NULL) {
-			token_free(&first);
+			list_ufree(&first);
 			return -ENOMEM;
 		}
-		curr->str = NULL;
-		curr->next = NULL;
-		curr->prev = NULL;
 
 		if (start != pos) {
 			uint8_t tpos = 0;
 
-			curr->str = umalloc(pos - start + 1);
-			if (curr->str == NULL) {
-				ufree(curr);
-				token_free(&first);
-				return -ENOMEM;
-			}
 			memcpy(curr->str, line + start, pos - start);
 			curr->str[pos - start] = '\0';
 
@@ -144,12 +123,10 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 
 				curr->type = token_real;
 				ret = real_ator(curr->str, &curr->value);
-				ufree(curr->str);
-				curr->str = NULL;
 
 				if (ret == NULL) {
 					ufree(curr);
-					token_free(&first);
+					list_ufree(&first);
 					return -EINVAL;
 				}
 			}
@@ -170,10 +147,6 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 				if (!found) {
 					curr->type = token_var;
 				}
-				else {
-					ufree(curr->str);
-					curr->str = NULL;
-				}
 			}
 		}
 		else {
@@ -182,7 +155,7 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 			 * theoretically it's 100% ok */
 			if ((line[pos] < '%') || (line[pos] > '>')) {
 				ufree(curr);
-				token_free(&first);
+				list_ufree(&first);
 				return -EINVAL;
 			}
 			curr->type = (enum token_type)line[pos];

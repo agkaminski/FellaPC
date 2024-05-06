@@ -94,10 +94,8 @@ struct token {
 	struct token *prev;
 	enum token_type type;
 	real value;
-	char *str;
+	char str[];
 };
-
-void token_free(struct token **first);
 
 int8_t token_tokenize(struct token **tstr, const char *line);
 

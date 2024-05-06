@@ -67,9 +67,9 @@ static void intr_die(int err) __attribute__ ((noreturn));
 
 static void intr_die(int err)
 {
-	token_free(&rpn_output);
-	token_free(&rpn_opstack);
-	token_free(&rpn_stack);
+	list_ufree(&rpn_output);
+	list_ufree(&rpn_opstack);
+	list_ufree(&rpn_stack);
 
 	if (!interactive) {
 		char buff[8];
@@ -280,8 +280,6 @@ static void intr_collapseExp(real *o)
 			struct variable *var = intr_getVar(tok->str, 0);
 			tok->type = token_real;
 			memcpy(&tok->value, &var->val, sizeof(tok->value));
-			ufree(tok->str);
-			tok->str = NULL;
 			list_push(&rpn_stack, tok);
 		}
 		else if (tok->type == token_real) {
@@ -676,7 +674,7 @@ void intr_line(const char *line)
 	}
 
 	if (tstr->type >= (sizeof(entry) / sizeof(*entry))) {
-		token_free(&tstr);
+		list_ufree(&tstr);
 		intr_die(-EINVAL);
 	}
 
@@ -684,7 +682,7 @@ void intr_line(const char *line)
 
 	entry[tstr->type]();
 
-	token_free(&tstr);
+	list_ufree(&tstr);
 }
 
 void intr_run(struct line *start)
