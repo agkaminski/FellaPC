@@ -28,6 +28,7 @@ static struct {
 } jump;
 
 struct gosub_elem {
+	struct gosub_elem *next;
 	struct gosub_elem *prev;
 	int line;
 };
@@ -36,6 +37,7 @@ struct gosub_elem *gosub_stack = NULL;
 
 struct variable {
 	struct variable *next;
+	struct variable *prev;
 	const char *name;
 	real val;
 };
@@ -44,6 +46,7 @@ static struct variable *variables = NULL;
 
 struct for_elem {
 	struct for_elem *next;
+	struct for_elem *prev;
 	int line;
 	struct variable *iter;
 	real limit;
@@ -141,8 +144,7 @@ static struct variable *intr_getVar(const char *name, int8_t create)
 	var->name = vname;
 	memcpy(&var->val, &rzero, sizeof(real));
 
-	var->next = variables;
-	variables = var;
+	list_push(&variables, var);
 
 	return var;
 }
@@ -513,8 +515,7 @@ static void intr_for(void)
 	f->iter = iter;
 	f->limit = limit;
 	f->step = step;
-	f->next = for_stack;
-	for_stack = f;
+	list_push(&for_stack, f);
 }
 
 static void intr_next(void)
@@ -538,12 +539,7 @@ static void intr_next(void)
 			memcpy(&f->iter->val, &acc, sizeof(real));
 
 			if (real_compare(&f->limit, &f->iter->val) <= 0) {
-				if (prev != NULL) {
-					prev->next = f->next;
-				}
-				else {
-					for_stack = f->next;
-				}
+				list_pop(&for_stack, f);
 				ufree(f);
 			}
 			else {
@@ -615,9 +611,8 @@ static void intr_gosub(void)
 
 	new = intr_malloc(sizeof(*new));
 	new->line = line_curr;
-	new->prev = gosub_stack;
 
-	gosub_stack = new;
+	list_push(&gosub_stack, new);
 
 	token_curr = token_curr->next;
 	intr_expect(token_none);
@@ -634,7 +629,7 @@ static void intr_return(void)
 	jump.line = elem->line;
 	jump.jump = 1;
 
-	gosub_stack = elem->prev;
+	gosub_stack = elem->next;
 	ufree(elem);
 }
 
@@ -649,7 +644,7 @@ void intr_clean(int8_t hard)
 {
 	while (gosub_stack != NULL) {
 		struct gosub_elem *victim = gosub_stack;
-		gosub_stack = victim->prev;
+		gosub_stack = victim->next;
 		ufree(victim);
 	}
 
