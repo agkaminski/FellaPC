@@ -123,7 +123,6 @@ static int intr_expectInteger(void)
 static struct variable *intr_getVar(const char *name, int8_t create)
 {
 	struct variable *var;
-	char *vname;
 
 	var = variables;
 	while (var != NULL) {
@@ -640,26 +639,13 @@ static void intr_clear(void)
 
 void intr_clean(int8_t hard)
 {
-	while (gosub_stack != NULL) {
-		struct gosub_elem *victim = gosub_stack;
-		gosub_stack = victim->next;
-		ufree(victim);
-	}
-
-	while (for_stack != NULL) {
-		struct for_elem *victim = for_stack;
-		for_stack = victim->next;
-		ufree(victim);
-	}
+	list_ufree(&gosub_stack);
+	list_ufree(&for_stack);
 
 	jump.jump = 0;
 
 	if (hard) {
-		while (variables != NULL) {
-			struct variable *victim = variables;
-			variables = victim->next;
-			ufree(victim);
-		}
+		list_ufree(&variables);
 	}
 
 	line_curr = 0;

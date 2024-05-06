@@ -17,6 +17,7 @@
 #include "vga.h"
 #include "token.h"
 #include "interpreter.h"
+#include "list.h"
 
 static struct line *line_head = NULL;
 
@@ -44,14 +45,7 @@ static void cmd_list(void)
 
 static void cmd_new(void)
 {
-	struct line *curr;
-
-	while (line_head != NULL) {
-		curr = line_head;
-		line_head = curr->next;
-		ufree(curr);
-	}
-
+	list_ufree((void **)&line_head);
 	intr_clean(1);
 }
 

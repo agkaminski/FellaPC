@@ -2,9 +2,9 @@
 ; A.K. 2024
 
 .importzp		sp, ptr1, ptr2, ptr3
-.import			__2ptrPrologue, __indPrologue
+.import			__ptrPrologue, __2ptrPrologue, __indPrologue, _ufree
 
-.export			__list_push, __list_append, __list_pop
+.export			__list_push, __list_append, __list_pop, __list_ufree
 
 .segment		"CODE"
 
@@ -187,3 +187,45 @@
 
 .endproc
 
+.proc			__list_ufree: near
+
+				JSR __ptrPrologue
+
+@loop:			; ptr2 = *ptr1
+				LDA (ptr1), Y
+				STA ptr2
+				INY
+				LDA (ptr1), Y
+				STA ptr2 + 1
+				DEY
+
+				; if (ptr2 == NULL)
+				ORA ptr2
+				BEQ @end
+
+				; *ptr1 = ptr2->next
+				LDA (ptr2), Y
+				STA (ptr1), Y
+				INY
+				LDA (ptr2), Y
+				STA (ptr1), Y
+
+				; ufree(ptr1)
+				; need to save ptr1
+				LDA ptr1 + 1
+				PHA
+				LDA ptr1
+				PHA
+				LDA ptr2
+				LDX ptr2 + 1
+				JSR _ufree
+				PLA
+				STA ptr1
+				PLA
+				STA ptr1 + 1
+				LDY #0
+				BEQ @loop ; always true
+
+@end:			RTS
+
+.endproc

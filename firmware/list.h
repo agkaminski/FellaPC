@@ -24,8 +24,11 @@ void _list_append(void **list, void *elem);
 
 void _list_pop(void **list, void *elem);
 
+void _list_ufree(void **list);
+
 #define list_push(l, e) _list_push((void **)(l), (void *)(e))
 #define list_append(l, e) _list_append((void **)(l), (void *)(e))
 #define list_pop(l, e) _list_pop((void **)(l), (void *)(e))
+#define list_ufree(l) _list_ufree((void **)(l));
 
 #endif
