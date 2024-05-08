@@ -158,7 +158,6 @@ static uint8_t intr_opPrecedence(enum token_type type)
 
 		case token_mul:
 		case token_div:
-		case token_mod:
 			return 2;
 
 		case token_plus:
@@ -301,11 +300,6 @@ static void intr_collapseExp(real *o)
 				a = rpn_stack;
 
 				switch (tok->type) {
-					case token_mod:
-						/* TODO */
-						intr_die(-ENOSYS);
-						break;
-
 					case token_mul:
 						real_mul(&r, &a->value, &b->value);
 						break;

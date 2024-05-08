@@ -105,7 +105,7 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 					break;
 				}
 			}
-			else if (!isalnum(line[pos]) && (line[pos] != '$')) {
+			else if (!isalnum(line[pos]) && (line[pos] != '$') && (line[pos] != '%')) {
 				break;
 			}
 
@@ -164,7 +164,7 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 			/* Operators. Just convert to token and hope for the best.
 			 * Invalid token should be get by the interpreter, so
 			 * theoretically it's 100% ok */
-			if ((line[pos] < '%') || (line[pos] > '>')) {
+			if ((line[pos] < '(') || (line[pos] > '>')) {
 				list_ufree(&first);
 				return -EINVAL;
 			}

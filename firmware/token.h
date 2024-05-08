@@ -10,7 +10,7 @@
 #include "real.h"
 
 #define TOKEN_FUNCTION_START 128
-#define TOKEN_OPERATOR_START 37
+#define TOKEN_OPERATOR_START 40
 
 enum token_type {
 	/* Beginning tokens */
@@ -51,7 +51,6 @@ enum token_type {
 	token_asc,
 
 	/* Operators */
-	token_mod = '%',
 	token_lpara = '(',
 	token_rpara = ')',
 	token_mul = '*',
