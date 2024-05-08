@@ -48,6 +48,7 @@ static void tty_set(char c)
 static uint8_t tty_handleSpecial(uint8_t mod, uint8_t key)
 {
 	uint8_t start;
+	uint8_t diff;
 	(void)mod;
 
 	switch (key) {
@@ -78,6 +79,15 @@ static uint8_t tty_handleSpecial(uint8_t mod, uint8_t key)
 		case KEY_LEFT:
 			if (g_cursor_col > 0) {
 				--g_cursor_col;
+			}
+			break;
+
+		case KEY_TAB:
+			diff = 4 - (g_cursor_col & 3);
+			while (diff && (g_cursor_col < VGA_COLS - 1)) {
+				tty_set(' ');
+				++g_cursor_col;
+				--diff;
 			}
 			break;
 
