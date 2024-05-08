@@ -97,6 +97,8 @@ struct token {
 	char str[];
 };
 
+int8_t token_isValue(enum token_type type);
+
 int8_t token_tokenize(struct token **tstr, const char *line);
 
 #endif

@@ -57,17 +57,27 @@ static const struct {
 	{ "poke", token_poke }
 };
 
+static int8_t token_isreal(char c)
+{
+	return (isdigit(c)) || (c == '.');
+}
+
+int8_t token_isValue(enum token_type type)
+{
+	return ((type == token_var) || (type == token_real));
+}
+
 int8_t token_tokenize(struct token **tstr, const char *line)
 {
 	uint8_t pos = 0, start, isreal, isstr;
 	struct token *first = NULL, *curr, *prev = NULL;
 
 	while (line[pos] != '\0') {
-		while ((line[pos] == ' ') || (line[pos] == '\t')) {
+		while (isspace(line[pos])) {
 			++pos;
 		}
 
-		isreal = (isdigit(line[pos])) || (line[pos] == '.');
+		isreal = token_isreal(line[pos]);
 
 		if (line[pos] == '\"') {
 			isstr = 1;
@@ -83,7 +93,7 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 
 		while (line[pos] != '\0') {
 			if (isreal) {
-				if (!isdigit(line[pos]) && (line[pos] != '.')) {
+				if (!token_isreal(line[pos])) {
 					if (isalpha(line[pos])) {
 						return -EINVAL;
 					}
@@ -112,6 +122,8 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 			return -ENOMEM;
 		}
 
+		list_append(&first, curr);
+
 		if (start != pos) {
 			uint8_t tpos = 0;
 
@@ -125,7 +137,6 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 				ret = real_ator(curr->str, &curr->value);
 
 				if (ret == NULL) {
-					ufree(curr);
 					list_ufree(&first);
 					return -EINVAL;
 				}
@@ -154,7 +165,6 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 			 * Invalid token should be get by the interpreter, so
 			 * theoretically it's 100% ok */
 			if ((line[pos] < '%') || (line[pos] > '>')) {
-				ufree(curr);
 				list_ufree(&first);
 				return -EINVAL;
 			}
@@ -165,13 +175,12 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 			}
 
 			if ((curr->type == token_minus) &&
-					((prev == NULL) || ((prev->type != token_var) && (prev->type != token_real)))) {
+					((prev == NULL) || !token_isValue(prev->type))) {
 				curr->type = token_negative;
 			}
 			++pos;
 		}
 
-		list_append(&first, curr);
 		prev = curr;
 	}
 

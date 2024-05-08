@@ -94,9 +94,7 @@ static void intr_assertNotNull(void *ptr)
 static void *intr_malloc(uint8_t size)
 {
 	void *ret = umalloc(size);
-	if (ret == NULL) {
-		intr_die(-ENOMEM);
-	}
+	intr_assertNotNull(ret);
 	return ret;
 }
 
@@ -189,15 +187,20 @@ static void intr_shuntingYard(void)
 	struct token *curr, *t;
 
 	while ((token_curr != NULL) && (token_curr->type != token_semicol) &&
-			((token_curr->type == token_var) ||
-			(token_curr->type == token_real) ||
+			(token_isValue(token_curr->type) ||
 			(token_curr->type >= TOKEN_OPERATOR_START))) {
 
 		curr = token_curr;
 		token_curr = token_curr->next;
 		list_pop(NULL, curr); /* NULL's ok, never first element */
 
-		if ((curr->type == token_real) || (curr->type == token_var)) {
+		if (curr->type == token_var) {
+			struct variable *var = intr_getVar(curr->str, 0);
+			curr->type = token_real;
+			memcpy(&curr->value, &var->val, sizeof(curr->value));
+			list_append(&rpn_output, curr);
+		}
+		else if (curr->type == token_real) {
 			list_append(&rpn_output, curr);
 		}
 		else if ((curr->type == token_lpara) || (curr->type >= TOKEN_FUNCTION_START)) {
@@ -276,13 +279,7 @@ static void intr_collapseExp(real *o)
 		struct token *tok = rpn_output;
 		list_pop(&rpn_output, tok);
 
-		if (tok->type == token_var) {
-			struct variable *var = intr_getVar(tok->str, 0);
-			tok->type = token_real;
-			memcpy(&tok->value, &var->val, sizeof(tok->value));
-			list_push(&rpn_stack, tok);
-		}
-		else if (tok->type == token_real) {
+		if (tok->type == token_real) {
 			list_push(&rpn_stack, tok);
 		}
 		else {
@@ -703,6 +700,8 @@ void intr_run(struct line *start)
 
 		intr_line(curr->data);
 
+		curr = curr->next;
+
 		if (jump.jump) {
 			jump.jump = 0;
 			curr = start;
@@ -711,9 +710,6 @@ void intr_run(struct line *start)
 			}
 
 			intr_assertNotNull(curr);
-		}
-		else {
-			curr = curr->next;
 		}
 	}
 
