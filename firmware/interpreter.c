@@ -249,6 +249,8 @@ static void intr_shuntingYard(void)
 				list_pop(&rpn_opstack, t);
 				list_append(&rpn_output, t);
 			}
+
+			ufree(curr);
 		}
 		else { /* Operator */
 			while ((rpn_opstack != NULL) && (rpn_opstack->type != token_lpara)) {
@@ -378,10 +380,7 @@ static void intr_collapseExp(real *o)
 	}
 
 	memcpy(o, &rpn_stack->value, sizeof(*o));
-	ufree(rpn_stack);
-	rpn_stack = NULL;
-
-	/* All related tokens has been consumed and freed */
+	list_ufree(&rpn_stack);
 }
 
 static void intr_var(void)
