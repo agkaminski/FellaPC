@@ -366,3 +366,10 @@ int8_t real_compare(const real *a, const real *b)
 
 	return a->s;
 }
+
+void real_itor(real *r, int i)
+{
+	char buff[20];
+	itoa(i, buff, 10);
+	real_ator(buff, r);
+}

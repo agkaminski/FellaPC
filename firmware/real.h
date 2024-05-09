@@ -32,6 +32,8 @@ void real_rtoa(char *buff, const real *r);
 /* Super unsafe, but small */
 int real_rtoi(const real *r);
 
+void real_itor(real *r, int i);
+
 const char *real_ator(const char *buff, real *r);
 
 int8_t real_add(real *o, const real *a, const real *b);

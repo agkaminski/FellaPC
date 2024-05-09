@@ -16,6 +16,7 @@
 
 static uint8_t heap[28 * 1024];
 static const char prompt[] = "Ready\n";
+static char cmd[VGA_COLS + 1];
 
 int main(void)
 {
@@ -30,7 +31,6 @@ int main(void)
 	vga_puts(prompt);
 
 	while (1) {
-		char cmd[VGA_COLS + 1];
 		vga_vsync();
 		if (tty_update(cmd) > 0) {
 			err = cmd_parse(cmd);

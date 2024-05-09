@@ -158,17 +158,22 @@ static uint8_t intr_opPrecedence(enum token_type type)
 
 		case token_mul:
 		case token_div:
-			return 2;
+			return 3;
 
 		case token_plus:
 		case token_minus:
-			return 1;
+			return 2;
 
 		case token_lt:
 		case token_lteq:
 		case token_gt:
 		case token_gteq:
 		case token_eq:
+			return 1;
+
+		case token_and:
+		case token_not:
+		case token_or:
 			return 0;
 	}
 
@@ -208,9 +213,12 @@ static void intr_shuntingYard(void)
 		else if ((curr->type == token_real) | (curr->type == token_fre)) {
 			list_append(&rpn_output, curr);
 		}
-		else if ((curr->type == token_lpara) || (curr->type >= TOKEN_FUNCTION_START)) {
+		else if (curr->type == token_lpara) {
 			list_push(&rpn_opstack, curr);
 			++paracnt;
+		}
+		else if (curr->type >= TOKEN_FUNCTION_START) {
+			list_push(&rpn_opstack, curr);
 		}
 		else if (curr->type == token_coma) {
 			while (1) {
@@ -255,7 +263,8 @@ static void intr_shuntingYard(void)
 		else { /* Operator */
 			while ((rpn_opstack != NULL) && (rpn_opstack->type != token_lpara)) {
 				int8_t precedence = intr_opPrecedence(rpn_opstack->type) - intr_opPrecedence(curr->type);
-				if ((precedence < 0) || (!precedence && (curr->type == token_negative))) {
+				if ((precedence < 0) ||
+						(!precedence && ((curr->type == token_negative) || (curr->type == token_not)))) {
 					break;
 				}
 
@@ -278,10 +287,24 @@ static void intr_shuntingYard(void)
 	}
 }
 
+static void intr_getBinaryOpArgs(struct token **a, struct token **b)
+{
+	intr_assertNotNull(rpn_stack);
+	*b = rpn_stack;
+
+	list_pop(&rpn_stack, *b);
+
+	intr_assertNotNull(rpn_stack);
+	*a = rpn_stack;
+}
+
 static void intr_collapseExp(real *o)
 {
-	char buff[32];
 	size_t fre;
+	struct token *a, *b;
+	real r;
+	int8_t sign;
+	uint8_t *ptr;
 
 	intr_shuntingYard();
 
@@ -299,32 +322,50 @@ static void intr_collapseExp(real *o)
 				intr_assertNotNull(rpn_stack);
 				rpn_stack->value.s = -rpn_stack->value.s;
 			}
+			else if (tok->type == token_not) {
+				intr_assertNotNull(rpn_stack);
+				if (real_isZero(&rpn_stack->value)) {
+					memcpy(&rpn_stack->value, &rone, sizeof(rone));
+				}
+				else {
+					memcpy(&rpn_stack->value, &rzero, sizeof(rzero));
+				}
+			}
 			else if (tok->type >= TOKEN_FUNCTION_START) {
 				switch (tok->type) {
 					case token_fre:
 						ustat(NULL, &fre);
-						itoa(fre, buff, 10);
-						real_ator(buff, &tok->value);
+						real_itor(&tok->value, fre);
 						tok->type = token_real;
 						list_push(&rpn_stack, tok);
 						continue;
+
+					case token_abs:
+						intr_assertNotNull(rpn_stack);
+						rpn_stack->value.s = 1;
+						break;
+
+					case token_sgn:
+						intr_assertNotNull(rpn_stack);
+						sign = rpn_stack->value.s;
+						memcpy(&rpn_stack->value, &rone, sizeof(rone));
+						rpn_stack->value.s = sign;
+						break;
+
+					case token_peek:
+						intr_assertNotNull(rpn_stack);
+						ptr = (void *)real_rtoi(&rpn_stack->value);
+						real_itor(&rpn_stack->value, *ptr);
+						break;
 
 					default:
 						intr_die(-ENOSYS);
 				}
 			}
 			else { /* Binary operations */
-				struct token *a, *b;
-				real r;
 				int8_t cmp;
 
-				intr_assertNotNull(rpn_stack);
-				b = rpn_stack;
-
-				list_pop(&rpn_stack, b);
-
-				intr_assertNotNull(rpn_stack);
-				a = rpn_stack;
+				intr_getBinaryOpArgs(&a, &b);
 
 				switch (tok->type) {
 					case token_mul:
@@ -341,6 +382,24 @@ static void intr_collapseExp(real *o)
 
 					case token_div:
 						real_div(&r, &a->value, &b->value);
+						break;
+
+					case token_and:
+						if (real_isZero(&a->value) || real_isZero(&b->value)) {
+							memcpy(&r, &rzero, sizeof(rzero));
+						}
+						else {
+							memcpy(&r, &rone, sizeof(rone));
+						}
+						break;
+
+					case token_or:
+						if (real_isZero(&a->value) && real_isZero(&b->value)) {
+							memcpy(&r, &rzero, sizeof(rzero));
+						}
+						else {
+							memcpy(&r, &rone, sizeof(rone));
+						}
 						break;
 
 					default: /* Comparisions */
