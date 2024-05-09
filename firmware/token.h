@@ -72,6 +72,7 @@ enum token_type {
 	token_atn,
 	token_cos,
 	token_exp,
+	token_fre,
 	token_int,
 	token_log,
 	token_not,

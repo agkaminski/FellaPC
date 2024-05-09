@@ -38,6 +38,7 @@ static const struct {
 	{ "atn", token_atn },
 	{ "cos", token_cos },
 	{ "exp", token_exp },
+	{ "fre", token_fre },
 	{ "int", token_int },
 	{ "log", token_log },
 	{ "not", token_not },

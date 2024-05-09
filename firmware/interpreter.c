@@ -205,7 +205,7 @@ static void intr_shuntingYard(void)
 			memcpy(&curr->value, &var->val, sizeof(curr->value));
 			list_append(&rpn_output, curr);
 		}
-		else if (curr->type == token_real) {
+		else if ((curr->type == token_real) | (curr->type == token_fre)) {
 			list_append(&rpn_output, curr);
 		}
 		else if ((curr->type == token_lpara) || (curr->type >= TOKEN_FUNCTION_START)) {
@@ -278,6 +278,9 @@ static void intr_shuntingYard(void)
 
 static void intr_collapseExp(real *o)
 {
+	char buff[32];
+	size_t fre;
+
 	intr_shuntingYard();
 
 	/* FIXME: Calculation WIP */
@@ -293,6 +296,20 @@ static void intr_collapseExp(real *o)
 			if (tok->type == token_negative) {
 				intr_assertNotNull(rpn_stack);
 				rpn_stack->value.s = -rpn_stack->value.s;
+			}
+			else if (tok->type >= TOKEN_FUNCTION_START) {
+				switch (tok->type) {
+					case token_fre:
+						ustat(NULL, &fre);
+						itoa(fre, buff, 10);
+						real_ator(buff, &tok->value);
+						tok->type = token_real;
+						list_push(&rpn_stack, tok);
+						continue;
+
+					default:
+						intr_die(-ENOSYS);
+				}
 			}
 			else { /* Binary operations */
 				struct token *a, *b;
@@ -323,8 +340,6 @@ static void intr_collapseExp(real *o)
 					case token_div:
 						real_div(&r, &a->value, &b->value);
 						break;
-
-					/* TODO functions here */
 
 					default: /* Comparisions */
 						/* FIXME not really working */
