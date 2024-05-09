@@ -184,10 +184,16 @@ static void intr_shuntingYard(void)
 	 * after completing the calculation. */
 
 	struct token *curr, *t;
+	int8_t paracnt = 0;
 
 	while ((token_curr != NULL) && (token_curr->type != token_semicol) &&
 			(token_isValue(token_curr->type) ||
 			(token_curr->type >= TOKEN_OPERATOR_START))) {
+
+		if (!paracnt && (token_curr->type == token_coma)) {
+			/* Allow print coma not be consumed here */
+			break;
+		}
 
 		curr = token_curr;
 		token_curr = token_curr->next;
@@ -204,6 +210,7 @@ static void intr_shuntingYard(void)
 		}
 		else if ((curr->type == token_lpara) || (curr->type >= TOKEN_FUNCTION_START)) {
 			list_push(&rpn_opstack, curr);
+			++paracnt;
 		}
 		else if (curr->type == token_coma) {
 			while (1) {
@@ -235,6 +242,7 @@ static void intr_shuntingYard(void)
 
 			/* Discard left parenthesis */
 			ufree(t);
+			--paracnt;
 
 			t = rpn_opstack;
 			if ((t != NULL) && (t->type >= TOKEN_FUNCTION_START)) {
@@ -380,7 +388,6 @@ static void intr_var(void)
 
 static void intr_print(void)
 {
-	int8_t first = 1;
 	char buff[20];
 	real r;
 
@@ -390,34 +397,20 @@ static void intr_print(void)
 				vga_puts(token_curr->str);
 				break;
 
-			case token_real:
-			case token_var:
-			case token_negative:
+			case token_coma:
+				vga_putc('\t');
+				break;
+
+			case token_semicol:
+				vga_putc(' ');
+				break;
+
+			default:
 				intr_collapseExp(&r);
 				real_rtoa(buff, &r);
 				vga_puts(buff);
 				continue;
-
-			default:
-				if (!first) {
-					switch (token_curr->type) {
-						case token_coma:
-							vga_putc('\t');
-							break;
-
-						case token_semicol:
-							vga_putc(' ');
-							break;
-
-						default:
-							intr_die(-EINVAL);
-					}
-					break;
-				}
-				intr_die(-EINVAL);
 		}
-
-		first = 0;
 
 		token_curr = token_curr->next;
 	}
