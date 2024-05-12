@@ -170,7 +170,9 @@ const char *real_ator(const char *buff, real *r)
 	}
 
 	while (isdigit(buff[pos])) {
-		++r->e;
+		if (!dot) {
+			++r->e;
+		}
 		++pos;
 	}
 
