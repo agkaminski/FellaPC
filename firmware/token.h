@@ -75,7 +75,7 @@ enum token_type {
 	token_cos, /* TODO */
 	token_exp, /* TODO */
 	token_fre,
-	token_int, /* TODO */
+	token_int,
 	token_log, /* TODO */
 	token_rnd, /* TODO */
 	token_sgn,

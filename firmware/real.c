@@ -375,3 +375,26 @@ int8_t real_compare(const real *a, const real *b)
 
 	return a->s;
 }
+
+void real_int(real *r)
+{
+	if (!real_isZero(r)) {
+		if (r->s < 0) {
+			real t;
+
+			memcpy(&t, r, sizeof(t));
+			real_sub(r, &t, &rone);
+		}
+
+		if (r->e < 0) {
+			memcpy(r, &rzero, sizeof(*r));
+		}
+		else {
+			for (; r->e < (PRECISION - 1); ++r->e) {
+				real_shiftRight(r);
+			}
+		}
+
+		real_normalize(r);
+	}
+}

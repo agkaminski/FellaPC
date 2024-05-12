@@ -367,6 +367,11 @@ static void intr_collapseExp(real *o)
 						ufree(b);
 						break;
 
+					case token_int:
+						intr_assertNotNull(rpn_stack);
+						real_int(&rpn_stack->value);
+						break;
+
 					default:
 						intr_die(-ENOSYS);
 				}

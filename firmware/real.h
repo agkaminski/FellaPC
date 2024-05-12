@@ -46,4 +46,6 @@ int8_t real_div(real *o, const real *a, const real *b);
 
 int8_t real_compare(const real *a, const real *b);
 
+void real_int(real *r);
+
 #endif
