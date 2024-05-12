@@ -45,7 +45,7 @@ static void cmd_list(void)
 
 static void cmd_new(void)
 {
-	list_ufree((void **)&line_head);
+	list_ufree(&line_head);
 	intr_clean(1);
 }
 

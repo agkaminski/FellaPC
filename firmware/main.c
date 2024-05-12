@@ -18,32 +18,45 @@ static uint8_t heap[28 * 1024];
 static const char prompt[] = "Ready\n";
 static char cmd[VGA_COLS + 1];
 
+const char *welcome[] = {
+	"CLEAR",
+	"PRINT\"FellaPC " VERSION "\"",
+	"PRINT\"github.com/agkaminski/FellaPC\"",
+	"PRINT\"Copyright A.K. 2024\"",
+	"PRINT\"BASIC\";FRE;\"bytes free.\"",
+	"NEW"
+};
+
 int main(void)
 {
-	int8_t err;
+	int8_t err = 0, i;
 	char buff[16] = "error ";
 
 	vga_selectRom(0);
-	vga_clear();
 
 	ualloc_init(heap, sizeof(heap));
 
-	vga_puts(prompt);
+	for (i = 0; i < sizeof(welcome) / sizeof(*welcome); ++i) {
+		cmd_parse(welcome[i]);
+	}
 
 	while (1) {
-		vga_vsync();
-		if (tty_update(cmd) > 0) {
-			err = cmd_parse(cmd);
-			if (err < 0) {
-				itoa(-err, buff + 6, 10);
-				vga_puts(buff);
-				vga_putc('\n');
-			}
-			else if (err == 0) {
-				vga_putc('\n');
-				vga_puts(prompt);
-			}
+		if (err < 0) {
+			itoa(-err, buff + 6, 10);
+			vga_puts(buff);
+			vga_putc('\n');
 		}
+		else if (err == 0) {
+			vga_putc('\n');
+			vga_puts(prompt);
+		}
+
+		do {
+			vga_vsync();
+			err = tty_update(cmd);
+		} while (err <= 0);
+
+		err = cmd_parse(cmd);
 	}
 
 	return 0;

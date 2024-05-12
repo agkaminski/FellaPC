@@ -71,19 +71,18 @@ enum token_type {
 
 	/* Functions */
 	token_abs = TOKEN_FUNCTION_START,
-	token_atn,
-	token_cos,
-	token_exp,
+	token_atn, /* TODO */
+	token_cos, /* TODO */
+	token_exp, /* TODO */
 	token_fre,
-	token_int,
-	token_log,
-	token_rnd,
+	token_int, /* TODO */
+	token_log, /* TODO */
+	token_rnd, /* TODO */
 	token_sgn,
-	token_sin,
-	token_sqr,
-	token_tan,
-	token_poke,
-	token_peek,
+	token_sin, /* TODO */
+	token_sqr, /* TODO */
+	token_tan, /* TODO */
+	token_peek, /* TODO */
 
 	/* Error */
 	token_none
