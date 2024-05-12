@@ -113,6 +113,13 @@ int real_rtoi(const real *r)
 	return atoi(buff);
 }
 
+void real_itor(real *r, int i)
+{
+	char buff[20];
+	itoa(i, buff, 10);
+	real_ator(buff, r);
+}
+
 const char *real_ator(const char *buff, real *r)
 {
 	int8_t dot = 0, mpos;
@@ -365,11 +372,4 @@ int8_t real_compare(const real *a, const real *b)
 	}
 
 	return a->s;
-}
-
-void real_itor(real *r, int i)
-{
-	char buff[20];
-	itoa(i, buff, 10);
-	real_ator(buff, r);
 }

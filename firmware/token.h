@@ -83,6 +83,7 @@ enum token_type {
 	token_sqr, /* TODO */
 	token_tan, /* TODO */
 	token_peek, /* TODO */
+	token_poke,
 
 	/* Error */
 	token_none

@@ -358,6 +358,15 @@ static void intr_collapseExp(real *o)
 						real_itor(&rpn_stack->value, *ptr);
 						break;
 
+					case token_poke:
+						intr_getBinaryOpArgs(&a, &b);
+						ptr = (void *)real_rtoi(&a->value);
+						*ptr = (uint8_t)real_rtoi(&b->value);
+						list_pop(&rpn_stack, a);
+						ufree(a);
+						ufree(b);
+						break;
+
 					default:
 						intr_die(-ENOSYS);
 				}
@@ -438,7 +447,9 @@ static void intr_collapseExp(real *o)
 		}
 	}
 
-	memcpy(o, &rpn_stack->value, sizeof(*o));
+	if (o != NULL) {
+		memcpy(o, &rpn_stack->value, sizeof(*o));
+	}
 	list_ufree(&rpn_stack);
 }
 
@@ -730,14 +741,18 @@ void intr_line(const char *line)
 		intr_die(err);
 	}
 
-	if (tstr->type >= (sizeof(entry) / sizeof(*entry))) {
+	if (tstr->type == token_poke) {
+		token_curr = tstr;
+		intr_collapseExp(NULL);
+	}
+	else if (tstr->type >= (sizeof(entry) / sizeof(*entry))) {
 		list_ufree(&tstr);
 		intr_die(-EINVAL);
 	}
-
-	token_curr = tstr->next;
-
-	entry[tstr->type]();
+	else {
+		token_curr = tstr->next;
+		entry[tstr->type]();
+	}
 
 	list_ufree(&tstr);
 }
