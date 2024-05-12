@@ -137,7 +137,7 @@ static struct variable *intr_getVar(const char *name, int8_t create)
 	var = intr_malloc(sizeof(struct variable) + strlen(name) + 1);
 	strcpy((char *)var->name, name);
 
-	memcpy(&var->val, &rzero, sizeof(real));
+	real_setZero(&var->val);
 
 	list_push(&variables, var);
 
@@ -207,7 +207,7 @@ static void intr_shuntingYard(void)
 		if (curr->type == token_var) {
 			struct variable *var = intr_getVar(curr->str, 0);
 			curr->type = token_real;
-			memcpy(&curr->value, &var->val, sizeof(curr->value));
+			real_copy(&curr->value, &var->val);
 			list_append(&rpn_output, curr);
 		}
 		else if ((curr->type == token_real) | (curr->type == token_fre)) {
@@ -325,10 +325,10 @@ static void intr_collapseExp(real *o)
 			else if (tok->type == token_not) {
 				intr_assertNotNull(rpn_stack);
 				if (real_isZero(&rpn_stack->value)) {
-					memcpy(&rpn_stack->value, &rone, sizeof(rone));
+					real_setOne(&rpn_stack->value);
 				}
 				else {
-					memcpy(&rpn_stack->value, &rzero, sizeof(rzero));
+					real_setZero(&rpn_stack->value);
 				}
 			}
 			else if (tok->type >= TOKEN_FUNCTION_START) {
@@ -348,7 +348,7 @@ static void intr_collapseExp(real *o)
 					case token_sgn:
 						intr_assertNotNull(rpn_stack);
 						sign = rpn_stack->value.s;
-						memcpy(&rpn_stack->value, &rone, sizeof(rone));
+						real_setOne(&rpn_stack->value);
 						rpn_stack->value.s = sign;
 						break;
 
@@ -400,19 +400,19 @@ static void intr_collapseExp(real *o)
 
 					case token_and:
 						if (real_isZero(&a->value) || real_isZero(&b->value)) {
-							memcpy(&r, &rzero, sizeof(rzero));
+							real_setZero(&r);
 						}
 						else {
-							memcpy(&r, &rone, sizeof(rone));
+							real_setZero(&r);
 						}
 						break;
 
 					case token_or:
 						if (real_isZero(&a->value) && real_isZero(&b->value)) {
-							memcpy(&r, &rzero, sizeof(rzero));
+							real_setZero(&r);
 						}
 						else {
-							memcpy(&r, &rone, sizeof(rone));
+							real_setOne(&r);
 						}
 						break;
 
@@ -441,11 +441,16 @@ static void intr_collapseExp(real *o)
 								break;
 						}
 
-						memcpy(&r, cmp ? &rone : &rzero, sizeof(r));
+						if (cmp) {
+							real_setOne(&r);
+						}
+						else {
+							real_setZero(&r);
+						}
 						break;
 				}
 
-				memcpy(&a->value, &r, sizeof(r));
+				real_copy(&a->value, &r);
 				ufree(b);
 			}
 			ufree(tok);
@@ -453,7 +458,7 @@ static void intr_collapseExp(real *o)
 	}
 
 	if (o != NULL) {
-		memcpy(o, &rpn_stack->value, sizeof(*o));
+		real_copy(o, &rpn_stack->value);
 	}
 	list_ufree(&rpn_stack);
 }
@@ -546,7 +551,7 @@ static void intr_for(void)
 	struct for_elem *f;
 	real limit, step;
 
-	memcpy(&step, &rone, sizeof(real));
+	real_setOne(&step);
 
 	iter = intr_getTokVar();
 
@@ -604,7 +609,7 @@ static void intr_next(void)
 			if (err < 0) {
 				intr_die(err);
 			}
-			memcpy(&f->iter->val, &acc, sizeof(real));
+			real_copy(&f->iter->val, &acc);
 
 			if (real_compare(&f->limit, &f->iter->val) <= 0) {
 				list_pop(&for_stack, f);

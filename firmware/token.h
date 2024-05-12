@@ -82,7 +82,7 @@ enum token_type {
 	token_sin, /* TODO */
 	token_sqr, /* TODO */
 	token_tan, /* TODO */
-	token_peek, /* TODO */
+	token_peek,
 	token_poke,
 
 	/* Error */

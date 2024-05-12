@@ -20,8 +20,11 @@ typedef struct {
 	int8_t s;
 } real;
 
-extern const real rzero;
-extern const real rone;
+void real_copy(real *dest, const real *src);
+
+void real_setZero(real *r);
+
+void real_setOne(real *r);
 
 int8_t real_isZero(const real *r);
 

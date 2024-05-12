@@ -8,10 +8,16 @@
 .export			_real_shiftRight
 .export			_real_cmp
 .export			_real_normalize
+.export			_real_copy
+.export			_real_setZero
+.export			_real_setOne
 
 .importzp		sp, ptr1, ptr2, tmp1, tmp2
 
 .import			__ptrPrologue, __2ptrPrologue
+.import			pushax, _memcpy
+
+.import			_rzero, _rone
 
 .segment		"CODE"
 
@@ -198,3 +204,29 @@
 
 .endproc
 
+.proc			_real_copy: near
+
+				JSR pushax
+				LDA #7
+				LDX #0
+				JMP _memcpy
+
+.endproc
+
+.proc			_real_setZero: near
+
+				JSR pushax
+				LDA #<_rzero
+				LDX #>_rzero
+				JMP _real_copy
+
+.endproc
+
+.proc			_real_setOne: near
+
+				JSR pushax
+				LDA #<_rone
+				LDX #>_rone
+				JMP _real_copy
+
+.endproc

@@ -37,7 +37,7 @@ void real_rtoa(char *buff, const real *r)
 	int16_t e;
 	real t;
 
-	memcpy(&t, r, sizeof(t));
+	real_copy(&t, r);
 
 	if (real_isZero(&t)) {
 		buff[0] = '0';
@@ -199,7 +199,7 @@ int8_t real_add(real *o, const real *a, const real *b)
 
 	if (a->s != b->s) {
 		real t;
-		memcpy(&t, b, sizeof(t));
+		real_copy(&t, b);
 		t.s = (t.s < 0) ? 1 : -1;
 		return real_sub(o, a, &t);
 	}
@@ -208,7 +208,7 @@ int8_t real_add(real *o, const real *a, const real *b)
 		SWAP(a, b);
 	}
 
-	memcpy(o, a, sizeof(*o));
+	real_copy(o, a);
 
 	while (o->e < b->e) {
 		real_shiftRight(o);
@@ -234,11 +234,11 @@ int8_t real_sub(real *o, const real *a, const real *b)
 {
 	int8_t cmp;
 	int8_t signswap = 0;
-	uint8_t temp[PRECISION / 2];
+	real temp;
 
 	if (a->s != b->s) {
 		real t;
-		memcpy(&t, b, sizeof(t));
+		real_copy(&t, b);
 		t.s = (t.s < 0) ? 1 : -1;
 		return real_add(o, a, &t);
 	}
@@ -248,7 +248,7 @@ int8_t real_sub(real *o, const real *a, const real *b)
 		signswap = 1;
 	}
 
-	memcpy(o, a, sizeof(*o));
+	real_copy(o, a);
 
 	if (signswap) {
 		o->s = (o->s < 0) ? 1 : -1;
@@ -266,14 +266,15 @@ int8_t real_sub(real *o, const real *a, const real *b)
 			break;
 
 		case -1:
-			memcpy(temp, b->m, sizeof(temp));
-			_real_bcdSub(temp, o->m);
-			memcpy(o->m, temp, sizeof(o->m));
+			real_copy(&temp, b);
+			temp.e = o->e;
+			_real_bcdSub(temp.m, o->m);
+			real_copy(o, &temp);
 			o->s = (o->s < 0) ? 1 : -1;
 			break;
 
 		default:
-			memcpy(o, &rzero, sizeof(*o));
+			real_setZero(o);
 			return 0;
 	}
 
@@ -287,9 +288,9 @@ int8_t real_mul(real *o, const real *a, const real *b)
 	real t, acc;
 	uint8_t i;
 
-	memcpy(o, &rzero, sizeof(*o));
-	memcpy(&acc, &rzero, sizeof(t));
-	memcpy(&t, a, sizeof(t));
+	real_setZero(o);
+	real_setZero(&acc);
+	real_copy(&t, a);
 
 	t.e -= 9;
 
@@ -301,7 +302,7 @@ int8_t real_mul(real *o, const real *a, const real *b)
 			if (real_add(o, &acc, &t) < 0) {
 				return -1;
 			}
-			memcpy(&acc, o, sizeof(acc));
+			real_copy(&acc, o);
 		}
 		++t.e;
 	}
@@ -322,10 +323,10 @@ int8_t real_div(real *o, const real *a, const real *b)
 		return -1;
 	}
 
-	memcpy(&t, a, sizeof(t));
-	memcpy(&d, b, sizeof(t));
+	real_copy(&t, a);
+	real_copy(&d, b);
+	real_setZero(&acc);
 	memset(o->m, 0, sizeof(o->m));
-	memcpy(&acc, &rzero, sizeof(acc));
 
 	t.s = 1;
 	t.e = 0;
@@ -339,7 +340,7 @@ int8_t real_div(real *o, const real *a, const real *b)
 				break;
 			}
 			o->m[i >> 1] += (i & 1) ? 0x10 : 1;
-			memcpy(&t, &acc, sizeof(t));
+			real_copy(&t, &acc);
 		}
 		++t.e;
 	}
@@ -356,8 +357,8 @@ int8_t real_compare(const real *a, const real *b)
 {
 	real x, y, t;
 
-	memcpy(&x, a, sizeof(x));
-	memcpy(&y, b, sizeof(y));
+	real_copy(&x, a);
+	real_copy(&y, b);
 
 	if (a->s != b->s) {
 		return (a->s > 0) ? 1 : -1;
@@ -385,12 +386,12 @@ void real_int(real *r)
 		if (r->s < 0) {
 			real t;
 
-			memcpy(&t, r, sizeof(t));
+			real_copy(&t, r);
 			real_sub(r, &t, &rone);
 		}
 
 		if (r->e < 0) {
-			memcpy(r, &rzero, sizeof(*r));
+			real_setZero(r);
 		}
 		else {
 			for (; r->e < (PRECISION - 1); ++r->e) {
