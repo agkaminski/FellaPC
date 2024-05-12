@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "system.h"
 #include "vga.h"
 #include "keyboard.h"
 #include "tty.h"
@@ -14,7 +15,6 @@
 #include "cmd.h"
 #include "real.h"
 
-static uint8_t heap[28 * 1024];
 static const char prompt[] = "Ready\n";
 static char cmd[VGA_COLS + 1];
 
@@ -32,9 +32,7 @@ int main(void)
 	int8_t err = 0, i;
 	char buff[16] = "error ";
 
-	vga_selectRom(0);
-
-	ualloc_init(heap, sizeof(heap));
+	system_init();
 
 	for (i = 0; i < sizeof(welcome) / sizeof(*welcome); ++i) {
 		cmd_parse(welcome[i]);
