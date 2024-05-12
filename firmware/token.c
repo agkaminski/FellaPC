@@ -58,11 +58,6 @@ static const struct {
 	{ "poke", token_poke }
 };
 
-static int8_t token_isreal(char c)
-{
-	return (isdigit(c)) || (c == '.');
-}
-
 int8_t token_isValue(enum token_type type)
 {
 	return ((type == token_var) || (type == token_real));
@@ -78,43 +73,37 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 			++pos;
 		}
 
-		isreal = token_isreal(line[pos]);
-
-		if (line[pos] == '\"') {
-			isstr = 1;
-			++pos;
-		}
-		else {
-			isstr = 0;
-		}
-
 		start = pos;
 
-		/* Cut the token */
+		isreal = (isdigit(line[pos])) || (line[pos] == '.');
+		if (!isreal) {
+			if (line[pos] == '\"') {
+				isstr = 1;
+				++pos;
+				start = pos;
+			}
+			else {
+				isstr = 0;
+			}
 
-		while (line[pos] != '\0') {
-			if (isreal) {
-				if (!token_isreal(line[pos])) {
-					if (isalpha(line[pos])) {
-						return -EINVAL;
+			/* Cut the token */
+
+			while (line[pos] != '\0') {
+				if (isstr) {
+					if (line[pos] == '\"') {
+						break;
 					}
+				}
+				else if (!isalnum(line[pos]) && (line[pos] != '$') && (line[pos] != '%')) {
 					break;
 				}
-			}
-			else if (isstr) {
-				if (line[pos] == '\"') {
-					break;
-				}
-			}
-			else if (!isalnum(line[pos]) && (line[pos] != '$') && (line[pos] != '%')) {
-				break;
+
+				++pos;
 			}
 
-			++pos;
-		}
-
-		if (isstr && (line[pos] != '\"')) {
-			return -EINVAL;
+			if (isstr && (line[pos] != '\"')) {
+				return -EINVAL;
+			}
 		}
 
 		curr = umalloc(sizeof(*curr) + pos - start + 1);
@@ -125,24 +114,24 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 
 		list_append(&first, curr);
 
-		if (start != pos) {
+		if (isreal) {
+			const char *ret;
+			curr->type = token_real;
+			ret = real_ator(&line[pos], &curr->value);
+			if (ret == NULL) {
+				list_ufree(&first);
+				return -EINVAL;
+			}
+
+			pos = ret - line;
+		}
+		else if (start != pos) {
 			uint8_t tpos = 0;
 
 			memcpy(curr->str, line + start, pos - start);
 			curr->str[pos - start] = '\0';
 
-			if (isreal) {
-				const char *ret;
-
-				curr->type = token_real;
-				ret = real_ator(curr->str, &curr->value);
-
-				if (ret == NULL) {
-					list_ufree(&first);
-					return -EINVAL;
-				}
-			}
-			else if (isstr) {
+			if (isstr) {
 				curr->type = token_str;
 				++pos; /* Eat closing " */
 			}

@@ -182,7 +182,10 @@ const char *real_ator(const char *buff, real *r)
 			return NULL;
 		}
 		r->e = e;
-		 while (isdigit(buff[pos])) {
+		if (buff[pos] == '-') {
+			++pos;
+		}
+		while (isdigit(buff[pos])) {
 			++pos;
 		}
 	}
