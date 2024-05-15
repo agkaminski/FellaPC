@@ -268,9 +268,9 @@ int8_t real_sub(real *o, const real *a, const real *b)
 		case -1:
 			real_copy(&temp, b);
 			temp.e = o->e;
+			temp.s = (o->s < 0) ? 1 : -1;
 			_real_bcdSub(temp.m, o->m);
 			real_copy(o, &temp);
-			o->s = (o->s < 0) ? 1 : -1;
 			break;
 
 		default:
@@ -325,7 +325,6 @@ int8_t real_div(real *o, const real *a, const real *b)
 
 	real_copy(&t, a);
 	real_copy(&d, b);
-	real_setZero(&acc);
 	memset(o->m, 0, sizeof(o->m));
 
 	t.s = 1;
