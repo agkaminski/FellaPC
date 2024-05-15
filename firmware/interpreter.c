@@ -84,6 +84,17 @@ static void intr_die(int err)
 	cmd_die(err);
 }
 
+static void intr_nextToken(void)
+{
+	token_curr = token_curr->next;
+}
+
+static void intr_jump(int line)
+{
+	jump.line = line;
+	jump.jump = 1;
+}
+
 static void intr_assertNotNull(void *ptr)
 {
 	if (ptr == NULL) {
@@ -201,7 +212,7 @@ static void intr_shuntingYard(void)
 		}
 
 		curr = token_curr;
-		token_curr = token_curr->next;
+		intr_nextToken();
 		list_pop(NULL, curr); /* NULL's ok, never first element */
 
 		if (curr->type == token_var) {
@@ -403,7 +414,7 @@ static void intr_collapseExp(real *o)
 							real_setZero(&r);
 						}
 						else {
-							real_setZero(&r);
+							real_setOne(&r);
 						}
 						break;
 
@@ -471,10 +482,10 @@ static void intr_var(void)
 
 	var = intr_getTokVar();
 
-	token_curr = token_curr->next;
+	intr_nextToken();
 	intr_expect(token_eq);
-	token_curr = token_curr->next;
 
+	intr_nextToken();
 	intr_collapseExp(&var->val);
 
 	intr_expect(token_none);
@@ -506,7 +517,7 @@ static void intr_print(void)
 				continue;
 		}
 
-		token_curr = token_curr->next;
+		intr_nextToken();
 	}
 
 	vga_putc('\n');
@@ -523,14 +534,14 @@ static void intr_input(void)
 	if (token_curr->type == token_str) {
 		prompt = token_curr->str;
 
-		token_curr = token_curr->next;
+		intr_nextToken();
 		intr_expect(token_coma);
-		token_curr = token_curr->next;
+		intr_nextToken();
 	}
 
 	var = intr_getTokVar();
 
-	token_curr = token_curr->next;
+	intr_nextToken();
 	intr_expect(token_none);
 
 	vga_puts(prompt);
@@ -545,6 +556,19 @@ static void intr_input(void)
 	real_ator(cmd, &var->val);
 }
 
+static struct for_elem *intr_forFindIter(struct variable *iter)
+{
+	struct for_elem *f;
+
+	while (f != NULL) {
+		if (f->iter == iter) {
+			break;
+		}
+		f = f->next;
+	}
+	return f;
+}
+
 static void intr_for(void)
 {
 	struct variable *iter;
@@ -554,30 +578,25 @@ static void intr_for(void)
 	real_setOne(&step);
 
 	iter = intr_getTokVar();
-
-	f = for_stack;
-	while (f != NULL) {
-		if (f->iter == iter) {
-			intr_die(-EINVAL);
-		}
-		f = f->next;
+	if (intr_forFindIter(iter) != NULL) {
+		intr_die(-EINVAL);
 	}
 
-	token_curr = token_curr->next;
+	intr_nextToken();
 	intr_expect(token_eq);
 
-	token_curr = token_curr->next;
+	intr_nextToken();
 	intr_collapseExp(&iter->val);
 
 	intr_expect(token_to);
 
-	token_curr = token_curr->next;
+	intr_nextToken();
 	intr_collapseExp(&limit);
 
 	if (token_curr != NULL) {
 		intr_expect(token_step);
 
-		token_curr = token_curr->next;
+		intr_nextToken();
 		intr_collapseExp(&step);
 
 		intr_expect(token_none);
@@ -586,8 +605,8 @@ static void intr_for(void)
 	f = intr_malloc(sizeof(*f));
 	f->line = line_next;
 	f->iter = iter;
-	f->limit = limit;
-	f->step = step;
+	real_copy(&f->limit, &limit);
+	real_copy(&f->step, &step);
 	list_push(&for_stack, f);
 }
 
@@ -600,40 +619,34 @@ static void intr_next(void)
 
 	var = intr_getTokVar();
 
-	token_curr = token_curr->next;
+	intr_nextToken();
 	intr_expect(token_none);
 
-	while (f != NULL) {
-		if (f->iter == var) {
-			err = real_add(&acc, &f->iter->val, &f->step);
-			if (err < 0) {
-				intr_die(err);
-			}
-			real_copy(&f->iter->val, &acc);
-
-			if (real_compare(&f->limit, &f->iter->val) <= 0) {
-				list_pop(&for_stack, f);
-				ufree(f);
-			}
-			else {
-				jump.line = f->line;
-				jump.jump = 1;
-			}
-			return;
-		}
-		prev = f;
-		f = f->next;
+	f = intr_forFindIter(var);
+	if (f == NULL) {
+		intr_die(-EINVAL);
 	}
 
-	intr_die(-EINVAL);
+	err = real_add(&acc, &f->iter->val, &f->step);
+	if (err < 0) {
+		intr_die(err);
+	}
+	real_copy(&f->iter->val, &acc);
+
+	if (real_compare(&f->limit, &f->iter->val) <= 0) {
+		list_pop(&for_stack, f);
+		ufree(f);
+	}
+	else {
+		intr_jump(f->line);
+	}
 }
 
 static void intr_goto(void)
 {
-	jump.line = intr_expectInteger();
-	jump.jump = 1;
+	intr_jump(intr_expectInteger());
 
-	token_curr = token_curr->next;
+	intr_nextToken();
 	intr_expect(token_none);
 }
 
@@ -647,24 +660,22 @@ static void intr_if(void)
 
 	intr_expect(token_then);
 
-	token_curr = token_curr->next;
+	intr_nextToken();
 
 	if (condition) {
-		jump.line = intr_expectInteger();
-		jump.jump = 1;
+		intr_jump(intr_expectInteger());
 		return;
 	}
 
-	token_curr = token_curr->next;
+	intr_nextToken();
 	if (token_curr != NULL) {
 		intr_expect(token_else);
 
-		token_curr = token_curr->next;
+		intr_nextToken();
 
-		jump.line = intr_expectInteger();
-		jump.jump = 1;
+		intr_jump(intr_expectInteger());
 
-		token_curr = token_curr->next;
+		intr_nextToken();
 		intr_expect(token_none);
 	}
 }
@@ -679,15 +690,14 @@ static void intr_gosub(void)
 {
 	struct gosub_elem *new;
 
-	jump.line = intr_expectInteger();
-	jump.jump = 1;
+	intr_jump(intr_expectInteger());
 
 	new = intr_malloc(sizeof(*new));
 	new->line = line_curr;
 
 	list_push(&gosub_stack, new);
 
-	token_curr = token_curr->next;
+	intr_nextToken();
 	intr_expect(token_none);
 }
 
@@ -699,8 +709,7 @@ static void intr_return(void)
 
 	intr_assertNotNull(elem);
 
-	jump.line = elem->line;
-	jump.jump = 1;
+	intr_jump(elem->line);
 
 	gosub_stack = elem->next;
 	ufree(elem);
@@ -718,13 +727,10 @@ void intr_clean(int8_t hard)
 	list_ufree(&gosub_stack);
 	list_ufree(&for_stack);
 
-	jump.jump = 0;
-
 	if (hard) {
 		list_ufree(&variables);
 	}
 
-	line_curr = 0;
 	interactive = 1;
 }
 
