@@ -558,7 +558,7 @@ static void intr_input(void)
 
 static struct for_elem *intr_forFindIter(struct variable *iter)
 {
-	struct for_elem *f;
+	struct for_elem *f = for_stack;
 
 	while (f != NULL) {
 		if (f->iter == iter) {
