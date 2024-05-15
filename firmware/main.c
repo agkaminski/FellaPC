@@ -13,7 +13,6 @@
 #include "tty.h"
 #include "ualloc/ualloc.h"
 #include "cmd.h"
-#include "real.h"
 
 static const char prompt[] = "Ready\n";
 static char cmd[VGA_COLS + 1];

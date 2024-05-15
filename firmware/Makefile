@@ -3,9 +3,10 @@ GOAL = firmware
 CPU = 6502
 TARGET = $(addsuffix .bin, ${GOAL})
 GHASH = "$(shell git describe --always --dirty)"
-OBJ = main.o dram.o interrupt.o vga.o keyboard.o keyboard_low.o tty.o \
-cmd.o real.o real_asm.o ualloc/ualloc_init.o ualloc/umalloc.o ualloc/ufree.o \
-ualloc/ustat.o token.o interpreter.o list.o helper.o system.o
+OBJ = main.o dram.o interrupt.o vga.o keyboard.o keyboard_low.o tty.o cmd.o \
+helper.o system.o \
+ualloc/ualloc_init.o ualloc/umalloc.o ualloc/ufree.o ualloc/ustat.o \
+basic/token.o basic/interpreter.o basic/list.o basic/real.o basic/real_asm.o
 
 .PHONY: clean
 .PRECIOUS: %.asm
@@ -21,7 +22,7 @@ ${TARGET}: ${OBJ} fellapc.lib
 	@ld65 -C bsp/fellapc.cfg -m ${GOAL}.map -o "$@" ${OBJ} bsp/fellapc.lib
 
 %.asm: %.c
-	@cc65 -I bsp -o "$@" -t none -O --cpu ${CPU} -DVERSION='${GHASH}' "$<"
+	@cc65 -I bsp -I. -o "$@" -t none -O --cpu ${CPU} -DVERSION='${GHASH}' "$<"
 
 %.o: %.s
 	@ca65 --cpu ${CPU} "$<" -o "$@"

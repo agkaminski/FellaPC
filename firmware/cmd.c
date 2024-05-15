@@ -15,9 +15,9 @@
 #include "cmd.h"
 #include "ualloc/ualloc.h"
 #include "vga.h"
-#include "token.h"
-#include "interpreter.h"
-#include "list.h"
+#include "basic/token.h"
+#include "basic/interpreter.h"
+#include "basic/list.h"
 
 static struct line *line_head = NULL;
 
