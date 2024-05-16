@@ -693,7 +693,7 @@ static void intr_gosub(void)
 	intr_jump(intr_expectInteger());
 
 	new = intr_malloc(sizeof(*new));
-	new->line = line_curr;
+	new->line = line_next;
 
 	list_push(&gosub_stack, new);
 
