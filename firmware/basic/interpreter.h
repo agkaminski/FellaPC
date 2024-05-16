@@ -13,7 +13,7 @@
 
 void intr_clean(int8_t hard);
 
-void intr_line(const char *line);
+int8_t intr_line(const char *line);
 
 void intr_run(struct line *start);
 

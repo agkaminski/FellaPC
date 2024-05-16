@@ -734,7 +734,7 @@ void intr_clean(int8_t hard)
 	interactive = 1;
 }
 
-void intr_line(const char *line)
+int8_t intr_line(const char *line)
 {
 	int8_t err;
 	struct token *tstr;
@@ -757,7 +757,10 @@ void intr_line(const char *line)
 		intr_die(err);
 	}
 
-	if (tstr->type == token_poke) {
+	if (tstr->type == token_end) {
+		return 1;
+	}
+	else if (tstr->type == token_poke) {
 		token_curr = tstr;
 		intr_collapseExp(NULL);
 	}
@@ -771,6 +774,7 @@ void intr_line(const char *line)
 	}
 
 	list_ufree(&tstr);
+	return 0;
 }
 
 void intr_run(struct line *start)
@@ -789,7 +793,9 @@ void intr_run(struct line *start)
 		line_curr = curr->number;
 		line_next = (curr->next != NULL) ? curr->next->number : 0xffffu;
 
-		intr_line(curr->data);
+		if (intr_line(curr->data) != 0) {
+			break;
+		}
 
 		curr = curr->next;
 
@@ -799,8 +805,6 @@ void intr_run(struct line *start)
 			while ((curr != NULL) && (curr->number != jump.line)) {
 				curr = curr->next;
 			}
-
-			intr_assertNotNull(curr);
 		}
 	}
 

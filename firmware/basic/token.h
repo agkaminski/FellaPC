@@ -29,6 +29,7 @@ enum token_type {
 	token_gosub,
 	token_return,
 	token_clear,
+	token_end,
 
 	/* Following tokens */
 

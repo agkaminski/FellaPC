@@ -55,7 +55,8 @@ static const struct {
 	{ "right$", token_right },
 	{ "asc", token_asc },
 	{ "peek", token_peek },
-	{ "poke", token_poke }
+	{ "poke", token_poke },
+	{ "end", token_end }
 };
 
 int8_t token_isValue(enum token_type type)
