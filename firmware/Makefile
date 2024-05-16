@@ -31,5 +31,5 @@ ${TARGET}: ${OBJ} fellapc.lib
 	@ca65 --cpu ${CPU} "$<" -o "$@"
 
 clean:
-	@rm -f *.o *.asm *.map *.bin
+	@rm -f *.o *.asm *.map *.bin basic/*.o basic/*.asm ualloc/*.o ualloc/*.asm
 	@cd bsp && $(MAKE) clean --no-print-directory
