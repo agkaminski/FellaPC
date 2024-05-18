@@ -43,14 +43,6 @@ enum token_type {
 	token_then,
 	token_else,
 
-	/* Array operators */
-	token_len,
-	token_chr,
-	token_mid,
-	token_left,
-	token_right,
-	token_asc,
-
 	/* Operators */
 	token_lpara = '(',
 	token_rpara = ')',
@@ -72,17 +64,12 @@ enum token_type {
 
 	/* Functions */
 	token_abs = TOKEN_FUNCTION_START,
-	token_atn, /* TODO */
-	token_cos, /* TODO */
-	token_exp, /* TODO */
 	token_fre,
 	token_int,
-	token_log, /* TODO */
-	token_rnd, /* TODO */
+	token_rnd,
+	token_time,
 	token_sgn,
-	token_sin, /* TODO */
 	token_sqr, /* TODO */
-	token_tan, /* TODO */
 	token_peek,
 	token_poke,
 

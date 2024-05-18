@@ -18,6 +18,7 @@
 #include "keyboard.h"
 #include "tty.h"
 #include "list.h"
+#include "system.h"
 
 static int line_curr;
 static int line_next;
@@ -221,7 +222,8 @@ static void intr_shuntingYard(void)
 			real_copy(&curr->value, &var->val);
 			list_append(&rpn_output, curr);
 		}
-		else if ((curr->type == token_real) | (curr->type == token_fre)) {
+		else if ((curr->type == token_real) | (curr->type == token_fre) |
+				(curr->type == token_time) | (curr->type == token_rnd)) {
 			list_append(&rpn_output, curr);
 		}
 		else if (curr->type == token_lpara) {
@@ -382,6 +384,18 @@ static void intr_collapseExp(real *o)
 						intr_assertNotNull(rpn_stack);
 						real_int(&rpn_stack->value);
 						break;
+
+					case token_time:
+						real_itor(&tok->value, (system_time() / 60) & 0x7FFF);
+						tok->type = token_real;
+						list_push(&rpn_stack, tok);
+						continue;
+
+					case token_rnd:
+						real_rand(&tok->value);
+						tok->type = token_real;
+						list_push(&rpn_stack, tok);
+						continue;
 
 					default:
 						intr_die(-ENOSYS);

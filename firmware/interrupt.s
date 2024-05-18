@@ -14,8 +14,10 @@
 .segment		"ZEROPAGE"
 
 _g_vsync:		.res 1
+jiffies:		.res 2
 
 .exportzp		_g_vsync
+.exportzp		jiffies
 
 .segment		"CODE"
 
@@ -40,6 +42,15 @@ _g_vsync:		.res 1
 
 				; Refresh DRAM
 				JSR _dram_refresh
+
+				; Increment jiffies
+				CLC
+				LDA #1
+				ADC jiffies
+				STA jiffies
+				LDA #0
+				ADC jiffies + 1
+				STA jiffies + 1
 
 				PLA
 				TAY

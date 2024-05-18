@@ -7,6 +7,10 @@
 #ifndef SYSTEM_H_
 #define SYSTEM_H_
 
+#include <stdint.h>
+
+uint16_t system_time(void);
+
 void system_init(void);
 
 #endif

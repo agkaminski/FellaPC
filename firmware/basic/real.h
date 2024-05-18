@@ -51,4 +51,6 @@ int8_t real_compare(const real *a, const real *b);
 
 void real_int(real *r);
 
+void real_rand(real *r);
+
 #endif

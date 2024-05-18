@@ -9,6 +9,7 @@
 #include <ctype.h>
 
 #include "real.h"
+#include "system.h"
 
 extern uint8_t _real_bcdAdd(uint8_t *a, uint8_t *b);
 extern void _real_bcdSub(uint8_t *a, uint8_t *b);
@@ -400,4 +401,32 @@ void real_int(real *r)
 
 		real_normalize(r);
 	}
+}
+
+static uint16_t rand16(uint16_t *seed)
+{
+	unsigned long next = (unsigned long)(*seed) * 1103515243 + 12345;
+	next >>= 16;
+	*seed ^= (uint16_t)next;
+	return next;
+}
+
+void real_rand(real *r)
+{
+	static uint16_t seed = 0;
+	uint8_t i;
+	real acc;
+
+	if (seed == 0) {
+		seed = system_time();
+	}
+
+	real_itor(r, rand16(&seed));
+	real_add(&acc, r, r);
+	real_copy(r, &acc);
+	real_add(&acc, r, r);
+	real_copy(r, &acc);
+
+	r->e = -1;
+	r->s = 1;
 }

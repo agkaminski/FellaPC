@@ -1,17 +1,4 @@
 TODO:
-- BASIC arrays (2 or 3 dimentions max),
-- BASIC strings + string related functions,
-- Functions:
-	- atn (taylor?)
-	- cos (sin)
-	- sin (taylor/cordic)
-	- exp (taylor?)
-	- ln (taylor?)
-	- log (ln)
-	- rnd (time?)
-	- pow (exp + ln)
-	- sqr (pow 1/2)
-	- tan (cos / sin)
 - I2C program save/load
 
 Nice to have:
