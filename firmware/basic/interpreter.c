@@ -450,6 +450,10 @@ static void intr_collapseExp(real *o)
 							++cmp;
 						}
 
+						if (tok->type == token_eq) {
+							cmp = !cmp ? 1 : 0;
+						}
+
 						if (cmp <= 0) {
 							real_setZero(&a->value);
 						}
