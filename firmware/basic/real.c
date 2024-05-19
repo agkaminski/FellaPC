@@ -201,7 +201,7 @@ int8_t real_add(real *o, const real *a, const real *b)
 	if (a->s != b->s) {
 		real t;
 		real_copy(&t, b);
-		t.s = (t.s < 0) ? 1 : -1;
+		t.s = -t.s;
 		return real_sub(o, a, &t);
 	}
 
@@ -248,7 +248,7 @@ int8_t real_sub(real *o, const real *a, const real *b)
 	if (a->s != b->s) {
 		real t;
 		real_copy(&t, b);
-		t.s = (t.s < 0) ? 1 : -1;
+		t.s = -t.s;
 		return real_add(o, a, &t);
 	}
 
@@ -260,7 +260,7 @@ int8_t real_sub(real *o, const real *a, const real *b)
 	real_copy(o, a);
 
 	if (signswap) {
-		o->s = (o->s < 0) ? 1 : -1;
+		o->s = -o->s;
 	}
 
 	while (o->e < b->e) {
@@ -277,7 +277,7 @@ int8_t real_sub(real *o, const real *a, const real *b)
 		case -1:
 			real_copy(&temp, b);
 			temp.e = o->e;
-			temp.s = (o->s < 0) ? 1 : -1;
+			temp.s = -o->s;
 			_real_bcdSub(temp.m, o->m);
 			real_copy(o, &temp);
 			break;
@@ -329,26 +329,22 @@ int8_t real_mul2(real *a, const real *b)
 
 int8_t real_div2(real *a, const real *b)
 {
-	real t, acc, d;
+	real t, acc;
 	int8_t i, sign = a->s;
-	int16_t e = a->e - b->e;
 
-	if ((e < INT8_MIN) || (e > INT8_MAX) || real_isZero(b)) {
+	if (real_isZero(b)) {
 		return -1;
 	}
 
 	real_copy(&t, a);
-	real_copy(&d, b);
 	memset(a->m, 0, sizeof(a->m));
 
-	t.s = 1;
-	t.e = 0;
-	d.s = 1;
-	d.e = 0;
+	t.s = b->s;
+	t.e = b->e;
 
 	for (i = PRECISION - 1; i > 0; --i) {
 		while (1) {
-			real_sub(&acc, &t, &d);
+			real_sub(&acc, &t, b);
 			if (acc.s != t.s) {
 				break;
 			}
@@ -358,7 +354,7 @@ int8_t real_div2(real *a, const real *b)
 		++t.e;
 	}
 
-	a->e = e;
+	a->e -= b->e;
 	a->s = (sign == b->s) ? 1 : -1;
 
 	real_normalize(a);
@@ -368,26 +364,24 @@ int8_t real_div2(real *a, const real *b)
 
 int8_t real_compare(const real *a, const real *b)
 {
-	real x, y, t;
+	real x, t;
 
 	real_copy(&x, a);
-	real_copy(&y, b);
 
 	if (a->s != b->s) {
-		return (a->s > 0) ? 1 : -1;
+		return a->s;
 	}
 
-	x.s = 1;
-	y.s = 1;
+	x.s = b->s;
 
-	real_sub(&t, &x, &y);
+	real_sub(&t, &x, b);
 
 	if (real_isZero(&t)) {
 		return 0;
 	}
 
 	if (t.s < 0) {
-		return (a->s > 0) ? -1 : 1;
+		return -a->s;
 	}
 
 	return a->s;
@@ -397,10 +391,7 @@ void real_int(real *r)
 {
 	if (!real_isZero(r)) {
 		if (r->s < 0) {
-			real t;
-
-			real_copy(&t, r);
-			real_sub(r, &t, &rone);
+			real_sub2(r, &rone);
 		}
 
 		if (r->e < 0) {
