@@ -125,17 +125,15 @@ int8_t token_tokenize(struct token **tstr, const char *line)
 				++pos; /* Eat closing " */
 			}
 			else {
-				uint8_t i, found = 0;
+				uint8_t i;
+
+				curr->type = token_var;
+
 				for (i = 0; i < sizeof(tokstr) / sizeof(*tokstr); ++i) {
 					if (strcasecmp(tokstr[i].str, curr->str) == 0) {
 						curr->type = tokstr[i].type;
-						found = 1;
 						break;
 					}
-				}
-
-				if (!found) {
-					curr->type = token_var;
 				}
 			}
 		}
