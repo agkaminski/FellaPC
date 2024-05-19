@@ -30,7 +30,6 @@ static void i2c_generateStart(void)
 	SCL_OFF;
 }
 
-
 static void i2c_generateStop(void)
 {
 	SDA_OFF;
