@@ -315,7 +315,6 @@ static void intr_collapseExp(real *o)
 {
 	size_t fre;
 	struct token *a, *b;
-	real r;
 	int8_t sign;
 	uint8_t *ptr;
 
@@ -408,36 +407,36 @@ static void intr_collapseExp(real *o)
 
 				switch (tok->type) {
 					case token_mul:
-						real_mul(&r, &a->value, &b->value);
+						real_mul2(&a->value, &b->value);
 						break;
 
 					case token_plus:
-						real_add(&r, &a->value, &b->value);
+						real_add2(&a->value, &b->value);
 						break;
 
 					case token_minus:
-						real_sub(&r, &a->value, &b->value);
+						real_sub2(&a->value, &b->value);
 						break;
 
 					case token_div:
-						real_div(&r, &a->value, &b->value);
+						real_div2(&a->value, &b->value);
 						break;
 
 					case token_and:
 						if (real_isZero(&a->value) || real_isZero(&b->value)) {
-							real_setZero(&r);
+							real_setZero(&a->value);
 						}
 						else {
-							real_setOne(&r);
+							real_setOne(&a->value);
 						}
 						break;
 
 					case token_or:
 						if (real_isZero(&a->value) && real_isZero(&b->value)) {
-							real_setZero(&r);
+							real_setZero(&a->value);
 						}
 						else {
-							real_setOne(&r);
+							real_setOne(&a->value);
 						}
 						break;
 
@@ -452,15 +451,14 @@ static void intr_collapseExp(real *o)
 						}
 
 						if (cmp <= 0) {
-							real_setZero(&r);
+							real_setZero(&a->value);
 						}
 						else {
-							real_setOne(&r);
+							real_setOne(&a->value);
 						}
 						break;
 				}
 
-				real_copy(&a->value, &r);
 				ufree(b);
 			}
 			ufree(tok);

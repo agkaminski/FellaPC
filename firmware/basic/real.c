@@ -292,40 +292,45 @@ int8_t real_sub(real *o, const real *a, const real *b)
 	return 0;
 }
 
-int8_t real_mul(real *o, const real *a, const real *b)
+int8_t real_sub2(real *o, const real *b)
 {
-	real t, acc;
+	real t;
+	int8_t ret = real_sub(&t, o, b);
+	real_copy(o, &t);
+	return ret;
+}
+
+int8_t real_mul2(real *a, const real *b)
+{
+	real acc;
 	uint8_t i;
 
-	real_setZero(o);
 	real_setZero(&acc);
-	real_copy(&t, a);
 
-	t.e -= 9;
+	a->e -= 9;
 
 	for (i = 0; i < PRECISION; ++i) {
 		uint8_t cnt = b->m[i >> 1];
 		cnt = (i & 1) ? HIGH(cnt) : LOW(cnt);
 
 		while (cnt--) {
-			if (real_add(o, &acc, &t) < 0) {
-				return -1;
-			}
-			real_copy(&acc, o);
+			real_add2(&acc, a);
 		}
-		++t.e;
+		++a->e;
 	}
 
-	o->e += b->e;
-	o->s = (a->s == b->s) ? 1 : -1;
+	acc.e += b->e;
+	acc.s = (a->s == b->s) ? 1 : -1;
+
+	real_copy(a, &acc);
 
 	return 0;
 }
 
-int8_t real_div(real *o, const real *a, const real *b)
+int8_t real_div2(real *a, const real *b)
 {
 	real t, acc, d;
-	int8_t i;
+	int8_t i, sign = a->s;
 	int16_t e = a->e - b->e;
 
 	if ((e < INT8_MIN) || (e > INT8_MAX) || real_isZero(b)) {
@@ -334,7 +339,7 @@ int8_t real_div(real *o, const real *a, const real *b)
 
 	real_copy(&t, a);
 	real_copy(&d, b);
-	memset(o->m, 0, sizeof(o->m));
+	memset(a->m, 0, sizeof(a->m));
 
 	t.s = 1;
 	t.e = 0;
@@ -347,16 +352,16 @@ int8_t real_div(real *o, const real *a, const real *b)
 			if (acc.s != t.s) {
 				break;
 			}
-			o->m[i >> 1] += (i & 1) ? 0x10 : 1;
+			a->m[i >> 1] += (i & 1) ? 0x10 : 1;
 			real_copy(&t, &acc);
 		}
 		++t.e;
 	}
 
-	o->e = e;
-	o->s = (a->s == b->s) ? 1 : -1;
+	a->e = e;
+	a->s = (sign == b->s) ? 1 : -1;
 
-	real_normalize(o);
+	real_normalize(a);
 
 	return 0;
 }
@@ -422,7 +427,6 @@ static uint16_t rand16(uint16_t *seed)
 void real_rand(real *r)
 {
 	static uint16_t seed = 0;
-	real acc;
 
 	if (seed == 0) {
 		seed = system_time();

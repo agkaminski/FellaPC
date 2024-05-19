@@ -45,9 +45,11 @@ int8_t real_add2(real *o, const real *b);
 
 int8_t real_sub(real *o, const real *a, const real *b);
 
-int8_t real_mul(real *o, const real *a, const real *b);
+int8_t real_sub2(real *o, const real *b);
 
-int8_t real_div(real *o, const real *a, const real *b);
+int8_t real_mul2(real *a, const real *b);
+
+int8_t real_div2(real *a, const real *b);
 
 int8_t real_compare(const real *a, const real *b);
 
