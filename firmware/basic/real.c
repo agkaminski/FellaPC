@@ -231,6 +231,14 @@ int8_t real_add(real *o, const real *a, const real *b)
 	return 0;
 }
 
+int8_t real_add2(real *o, const real *b)
+{
+	real t;
+	int8_t ret = real_add(&t, o, b);
+	real_copy(o, &t);
+	return ret;
+}
+
 int8_t real_sub(real *o, const real *a, const real *b)
 {
 	int8_t cmp;
@@ -414,7 +422,6 @@ static uint16_t rand16(uint16_t *seed)
 void real_rand(real *r)
 {
 	static uint16_t seed = 0;
-	uint8_t i;
 	real acc;
 
 	if (seed == 0) {
@@ -422,10 +429,8 @@ void real_rand(real *r)
 	}
 
 	real_itor(r, rand16(&seed));
-	real_add(&acc, r, r);
-	real_copy(r, &acc);
-	real_add(&acc, r, r);
-	real_copy(r, &acc);
+	real_add2(r, r);
+	real_add2(r, r);
 
 	r->e = -1;
 	r->s = 1;

@@ -550,8 +550,6 @@ static void intr_input(void)
 		vga_vsync();
 	} while (tty_update(cmd) <= 0);
 
-	/* TODO add strings */
-
 	real_ator(cmd, &var->val);
 }
 
@@ -614,7 +612,6 @@ static void intr_next(void)
 	struct variable *var;
 	struct for_elem *f = for_stack, *prev = NULL;
 	int8_t err;
-	real acc;
 
 	var = intr_getTokVar();
 
@@ -626,11 +623,10 @@ static void intr_next(void)
 		intr_die(-EINVAL);
 	}
 
-	err = real_add(&acc, &f->iter->val, &f->step);
+	err = real_add2(&f->iter->val, &f->step);
 	if (err < 0) {
 		intr_die(err);
 	}
-	real_copy(&f->iter->val, &acc);
 
 	if (real_compare(&f->limit, &f->iter->val) <= 0) {
 		list_pop(&for_stack, f);

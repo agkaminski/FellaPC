@@ -41,6 +41,8 @@ const char *real_ator(const char *buff, real *r);
 
 int8_t real_add(real *o, const real *a, const real *b);
 
+int8_t real_add2(real *o, const real *b);
+
 int8_t real_sub(real *o, const real *a, const real *b);
 
 int8_t real_mul(real *o, const real *a, const real *b);
