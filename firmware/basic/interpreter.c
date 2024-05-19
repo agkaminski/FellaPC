@@ -442,35 +442,20 @@ static void intr_collapseExp(real *o)
 						break;
 
 					default: /* Comparisions */
-						/* FIXME not really working */
 						cmp = real_compare(&a->value, &b->value);
-						switch (tok->type) {
-							case token_lt:
-								cmp = (cmp < 0);
-								break;
-
-							case token_lteq:
-								cmp = (cmp <= 0);
-								break;
-
-							case token_gt:
-								cmp = (cmp > 0);
-								break;
-
-							case token_gteq:
-								cmp = (cmp >= 0);
-								break;
-
-							case token_eq:
-								cmp = (cmp == 0);
-								break;
+						if ((tok->type == token_lt) || (tok->type == token_lteq)) {
+							cmp = -cmp;
 						}
 
-						if (cmp) {
-							real_setOne(&r);
+						if ((tok->type == token_gteq) || (tok->type == token_lteq)) {
+							++cmp;
+						}
+
+						if (cmp <= 0) {
+							real_setZero(&r);
 						}
 						else {
-							real_setZero(&r);
+							real_setOne(&r);
 						}
 						break;
 				}
