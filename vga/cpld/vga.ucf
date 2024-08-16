@@ -24,6 +24,12 @@ NET "row<8>"  LOC = "P25"  ;
 NET "rst_n"  LOC = "P39"  ; 
 NET "shload_n"  LOC = "P4"  ; 
 NET "vsync"  LOC = "P1"  ; 
+NET "scroll<0>"  LOC = "P20"  ;
+NET "scroll<1>"  LOC = "P22"  ;
+NET "scroll<2>"  LOC = "P43"  ;
+NET "scroll<3>"  LOC = "P44"  ;
+NET "scroll<4>"  LOC = "P24"  ;
+NET "scroll<5>"  LOC = "P38"  ;
 
 #PACE: Start of PACE Area Constraints
 

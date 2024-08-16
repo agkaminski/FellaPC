@@ -1,36 +1,18 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date:    09:49:49 02/25/2024 
-// Design Name: 
-// Module Name:    vga 
-// Project Name: 
-// Target Devices: 
-// Tool versions: 
-// Description: 
-//
-// Dependencies: 
-//
-// Revision: 
-// Revision 0.01 - File Created
-// Additional Comments: 
-//
-//////////////////////////////////////////////////////////////////////////////////
+
 module vga(
-    input pclk,
-	 input rst_n,
-    output [9:3] col,
-    output [8:0] row,
-    output reg blank,
-    output reg hsync,
-    output reg vsync,
-	 output reg vblank_n,
-    input oe_n,
-	 output shload_n,
-	 input [5:0] scroll
-    );
+	input pclk,
+	input rst_n,
+	output [9:3] col,
+	output [8:0] row,
+	output reg blank,
+	output reg hsync,
+	output reg vsync,
+	output reg vblank_n,
+	input oe_n,
+	output shload_n,
+	input [5:0] scroll
+);
 
 reg [9:0] col_i;
 reg [9:0] row_i;
@@ -98,8 +80,9 @@ always @(posedge pclk, negedge rst_n) begin
 	end
 end
 
-assign col = (~oe_n) ? (col_i >> 3) : 10'bz;
-assign row = (~oe_n) ? (row_i + (scroll << 3)) : 10'bz;
+assign col[9:3] = (~oe_n) ? col_i[9:3] : 10'bz;
+assign row[2:0] = (~oe_n) ? row_i[2:0] : 3'bz;
+assign row[8:3] = (~oe_n) ? (row_i[8:3] + scroll) : 6'bz;
 
 assign shload_n = (col_i[2:0] == 3'b111) ?  1'b0 : 1'b1;
 
