@@ -40,8 +40,6 @@ static const struct {
 	{ "not", token_not },
 	{ "or", token_or },
 	{ "rnd", token_rnd },
-	{ "time", token_time },
-	{ "sqr", token_sqr },
 	{ "peek", token_peek },
 	{ "poke", token_poke },
 	{ "end", token_end }

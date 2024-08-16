@@ -67,9 +67,6 @@ enum token_type {
 	token_fre,
 	token_int,
 	token_rnd,
-	token_time,
-	token_sgn,
-	token_sqr, /* TODO */
 	token_peek,
 	token_poke,
 

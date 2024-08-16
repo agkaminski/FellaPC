@@ -5,6 +5,7 @@
 ; PB7 SCL
 
 .importzp		tmp1, tmp2, ptr1, ptr2, ptr3, sp
+.export			_i2c_read, _i2c_write
 
 .define			ORB  $A010
 .define			DDRB $A012
@@ -12,8 +13,10 @@
 .define			SCL $80
 .define			nSDA $BF
 .define			nSCL $7F
-.define			DEVADDR $A0
 .define			MEMSZ $8000
+
+; 24AA256
+.define			DEVADDR $A0
 
 .define			dev tmp2
 .define			addr ptr1
@@ -34,9 +37,6 @@
 
 .proc			sda_on: near
 
-				LDA ORB
-				ORA #SDA
-				STA ORB
 				LDA DDRB
 				AND #nSDA
 				STA DDRB
@@ -58,12 +58,11 @@
 
 .proc			scl_on: near
 
-				LDA ORB
-				ORA #SCL
-				STA ORB
 				LDA DDRB
 				AND #nSCL
 				STA DDRB
+@loop:			JSR scl_read
+				BEQ @loop
 				RTS
 
 .endproc
@@ -126,14 +125,13 @@
 				JMP @next
 
 @zero:			JSR sda_off
-@next:			LDA tmp1
-				ASL
-				STA tmp1
-
-				JSR scl_on
+@next:			JSR scl_on
 				JSR scl_off
 
 				LDA tmp1
+				ASL
+				STA tmp1
+
 				DEY
 				BPL @loop
 
@@ -184,8 +182,9 @@
 
 .proc			i2c_address: near
 
-				; dev and addr in zeropage regs
+				; addr in zeropage regs, dev in A
 
+				STA dev
 				JSR i2c_generateStart
 
 				LDA dev
@@ -195,10 +194,10 @@
 				AND dev
 				BNE @end
 
-				LDA addr
+				LDA addr + 1
 				JSR i2c_sendByte
 
-				LDA addr + 1
+				LDA addr
 				JSR i2c_sendByte
 
 @end:			RTS
@@ -230,30 +229,21 @@
 
 .proc			i2c_nextByte: near
 
-				SEC
-				LDA #0
-				ADC addr
-				STA addr
-				LDA #0
-				ADC addr + 1
-				STA addr + 1
+				INC addr
+				BNE @data
+				INC addr + 1
 
-				SEC
-				LDA #0
-				ADC data
-				STA data
-				LDA #0
-				ADC data + 1
-				STA data + 1
+@data:			INC data
+				BNE @len
+				INC data + 1
 
-				CLC
-				LDA #0
-				SBC len
-				STA len
-				LDA #0
-				SBC len + 1
-				STA len + 1
-				RTS
+@len:			DEC len
+				LDA #255
+				CMP len
+				BNE @end
+
+				DEC len + 1
+@end:			RTS
 
 .endproc
 
@@ -262,7 +252,6 @@
 				JSR i2c_prologue
 
 @loop:			LDA #DEVADDR
-				STA dev
 				JSR i2c_address
 
 				LDY #0
@@ -286,32 +275,31 @@
 				JSR i2c_prologue
 
 				LDA #DEVADDR
-				STA dev
 				JSR i2c_address
 
 				LDA #DEVADDR | 1
-				STA dev
 				JSR i2c_address
 
-@loop:			LDA #1
+@loop:			LDA len + 1
+				BNE @ack
+				LDA len
+				CMP #1
+				BNE @ack
+				LDA #0
+				BEQ @get
+
+@ack:			LDA #1
+@get:			PHA
 				JSR i2c_getByte
 				LDY #0
 				STA (data), Y
 
 				JSR i2c_nextByte
 
-				LDA len + 1
-				BNE @loop
-				LDA len
-				CMP #1
+				PLA
 				BNE @loop
 
-				LDA #0
-				JSR i2c_getByte
-				LDY #0
-				STA (data), Y
-
-				RTS
+				JMP i2c_generateStop
 
 .endproc
 

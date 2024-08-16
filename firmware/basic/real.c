@@ -194,7 +194,7 @@ const char *real_ator(const char *buff, real *r)
 	return &buff[pos];
 }
 
-int8_t real_add(real *o, const real *a, const real *b)
+void real_add(real *o, const real *a, const real *b)
 {
 	uint8_t carry;
 
@@ -202,7 +202,8 @@ int8_t real_add(real *o, const real *a, const real *b)
 		real t;
 		real_copy(&t, b);
 		t.s = -t.s;
-		return real_sub(o, a, &t);
+		real_sub(o, a, &t);
+		return;
 	}
 
 	if (b->e < a->e) {
@@ -219,27 +220,20 @@ int8_t real_add(real *o, const real *a, const real *b)
 	carry = _real_bcdAdd(o->m, b->m);
 
 	if (carry) {
-		if (o->e == INT8_MAX) {
-			return -1;
-		}
-
 		real_shiftRight(o);
 		++o->e;
 		o->m[sizeof(o->m) - 1] |= 0x10;
 	}
-
-	return 0;
 }
 
-int8_t real_add2(real *o, const real *b)
+void real_add2(real *o, const real *b)
 {
 	real t;
-	int8_t ret = real_add(&t, o, b);
+	real_add(&t, o, b);
 	real_copy(o, &t);
-	return ret;
 }
 
-int8_t real_sub(real *o, const real *a, const real *b)
+void real_sub(real *o, const real *a, const real *b)
 {
 	int8_t cmp;
 	int8_t signswap = 0;
@@ -249,7 +243,8 @@ int8_t real_sub(real *o, const real *a, const real *b)
 		real t;
 		real_copy(&t, b);
 		t.s = -t.s;
-		return real_add(o, a, &t);
+		real_add(o, a, &t);
+		return;
 	}
 
 	if (b->e < a->e) {
@@ -284,23 +279,20 @@ int8_t real_sub(real *o, const real *a, const real *b)
 
 		default:
 			real_setZero(o);
-			return 0;
+			return;
 	}
 
 	real_normalize(o);
-
-	return 0;
 }
 
-int8_t real_sub2(real *o, const real *b)
+void real_sub2(real *o, const real *b)
 {
 	real t;
-	int8_t ret = real_sub(&t, o, b);
+	real_sub(&t, o, b);
 	real_copy(o, &t);
-	return ret;
 }
 
-int8_t real_mul2(real *a, const real *b)
+void real_mul2(real *a, const real *b)
 {
 	real acc;
 	uint8_t i;
@@ -323,17 +315,15 @@ int8_t real_mul2(real *a, const real *b)
 	acc.s = (a->s == b->s) ? 1 : -1;
 
 	real_copy(a, &acc);
-
-	return 0;
 }
 
-int8_t real_div2(real *a, const real *b)
+void real_div2(real *a, const real *b)
 {
 	real t, acc;
 	int8_t i, sign = a->s;
 
 	if (real_isZero(b)) {
-		return -1;
+		return;
 	}
 
 	real_copy(&t, a);
@@ -358,8 +348,6 @@ int8_t real_div2(real *a, const real *b)
 	a->s = (sign == b->s) ? 1 : -1;
 
 	real_normalize(a);
-
-	return 0;
 }
 
 int8_t real_compare(const real *a, const real *b)

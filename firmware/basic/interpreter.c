@@ -222,8 +222,9 @@ static void intr_shuntingYard(void)
 			real_copy(&curr->value, &var->val);
 			list_append(&rpn_output, curr);
 		}
-		else if ((curr->type == token_real) | (curr->type == token_fre) |
-				(curr->type == token_time) | (curr->type == token_rnd)) {
+		else if ((curr->type == token_real) |
+				(curr->type == token_fre) |
+				(curr->type == token_rnd)) {
 			list_append(&rpn_output, curr);
 		}
 		else if (curr->type == token_lpara) {
@@ -315,7 +316,6 @@ static void intr_collapseExp(real *o)
 {
 	size_t fre;
 	struct token *a, *b;
-	int8_t sign;
 	uint8_t *ptr;
 
 	intr_shuntingYard();
@@ -357,13 +357,6 @@ static void intr_collapseExp(real *o)
 						rpn_stack->value.s = 1;
 						break;
 
-					case token_sgn:
-						intr_assertNotNull(rpn_stack);
-						sign = rpn_stack->value.s;
-						real_setOne(&rpn_stack->value);
-						rpn_stack->value.s = sign;
-						break;
-
 					case token_peek:
 						intr_assertNotNull(rpn_stack);
 						ptr = (void *)real_rtoi(&rpn_stack->value);
@@ -383,12 +376,6 @@ static void intr_collapseExp(real *o)
 						intr_assertNotNull(rpn_stack);
 						real_int(&rpn_stack->value);
 						break;
-
-					case token_time:
-						real_itor(&tok->value, (system_time() / 60) & 0x7FFF);
-						tok->type = token_real;
-						list_push(&rpn_stack, tok);
-						continue;
 
 					case token_rnd:
 						real_rand(&tok->value);
@@ -613,7 +600,6 @@ static void intr_next(void)
 {
 	struct variable *var;
 	struct for_elem *f = for_stack, *prev = NULL;
-	int8_t err;
 
 	var = intr_getTokVar();
 
@@ -625,10 +611,7 @@ static void intr_next(void)
 		intr_die(-EINVAL);
 	}
 
-	err = real_add2(&f->iter->val, &f->step);
-	if (err < 0) {
-		intr_die(err);
-	}
+	real_add2(&f->iter->val, &f->step);
 
 	if (real_compare(&f->limit, &f->iter->val) <= 0) {
 		list_pop(&for_stack, f);

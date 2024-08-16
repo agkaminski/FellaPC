@@ -18,6 +18,7 @@
 #include "basic/token.h"
 #include "basic/interpreter.h"
 #include "basic/list.h"
+#include "i2c.h"
 
 static struct line *line_head = NULL;
 
@@ -28,17 +29,23 @@ void cmd_die(int8_t err)
 	longjmp(cmd_env, err);
 }
 
+static size_t cmd_sprintLine(char *buff, const struct line *line)
+{
+	utoa(line->number, buff, 10);
+	strcat(buff, " ");
+	strcat(buff, line->data);
+	strcat(buff, "\n");
+	return strlen(buff);
+}
+
 static void cmd_list(void)
 {
-	char buff[8];
+	char buff[VGA_COLS + 1];
 	struct line *curr = line_head;
 
 	while (curr != NULL) {
-		utoa(curr->number, buff, 10);
-		strcat(buff, " ");
+		cmd_sprintLine(buff, curr);
 		vga_puts(buff);
-		vga_puts(curr->data);
-		vga_putc('\n');
 		curr = curr->next;
 	}
 }
@@ -111,6 +118,49 @@ static void cmd_addLine(const char *cmd)
 	}
 }
 
+static void cmd_save(void)
+{
+	char buff[VGA_COLS + 1];
+	struct line *curr = line_head;
+	uint16_t address = 0;
+	size_t len;
+	static const char term = '\0';
+
+	while (curr != NULL) {
+		len = cmd_sprintLine(buff, curr);
+		i2c_write(address, buff, len);
+		curr = curr->next;
+		address += len;
+	}
+	i2c_write(address, &term, 1);
+}
+
+static void cmd_load(void)
+{
+	char buff[VGA_COLS + 1];
+	char c;
+	uint16_t address = 0;
+	uint8_t pos = 0;
+
+	while (1) {
+		i2c_read(address, &c, 1);
+		if ((c == '\0') || (c == 0xff)) {
+			break;
+		}
+
+		if (c == '\n') {
+			buff[pos] = '\0';
+			cmd_addLine(buff);
+			pos = 0;
+		}
+		else {
+			buff[pos++] = c;
+		}
+
+		++address;
+	}
+}
+
 int8_t cmd_parse(const char *cmd)
 {
 	int8_t err;
@@ -129,6 +179,12 @@ int8_t cmd_parse(const char *cmd)
 		}
 		else if (strcasecmp(cmd, "run") == 0) {
 			intr_run(line_head);
+		}
+		else if (strcasecmp(cmd, "save") == 0) {
+			cmd_save();
+		}
+		else if (strcasecmp(cmd, "load") == 0) {
+			cmd_load();
 		}
 		else if (*cmd != '\0') {
 			intr_line(cmd);
