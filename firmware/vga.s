@@ -22,8 +22,8 @@
 .importzp		_g_vsync
 
 .define			VDATA $8000
-.define			VCOL $8001
-.define			VROW $8002
+.define			VROW  $8080
+.define			VSCOL $8100
 
 .define			COLS 80
 .define			ROWS 60
@@ -45,6 +45,8 @@ cursor_counter:	.res 1, $0
 cursor_prev:	.res 1, $0
 cursor_state:	.res 1, $0
 
+scroll:			.res 1, $0
+
 .segment		"CODE"
 
 .proc			_vga_vsync: near
@@ -57,11 +59,11 @@ cursor_state:	.res 1, $0
 
 .endproc
 
-.proc			_vga_setCol: near
+.proc			_vga_setrow: near
 
-				JSR _vga_vsync
-				LDA	_g_cursor_col
-				STA VCOL
+				CLC
+				ADC scroll
+				STA VROW
 				RTS
 
 .endproc
@@ -79,8 +81,9 @@ cursor_state:	.res 1, $0
 				STA cursor_prev
 				LDX #CURSOR
 				STX cursor_state
-				JSR _vga_setCol
-				STX VDATA
+				TXA
+				LDX _g_cursor_col
+				STA VDATA, X
 				RTS
 
 @restore:		ASL A
@@ -121,8 +124,7 @@ cursor_state:	.res 1, $0
 
 @row_loop:		STY VROW
 				LDX #COLS - 1
-@col_loop:		STX VCOL
-				STA VDATA
+@col_loop:		STA VDATA, X
 				DEX
 				BPL @col_loop
 				DEY
@@ -130,57 +132,28 @@ cursor_state:	.res 1, $0
 
 				LDA #0
 				STA VROW
-
-				RTS
+				STA VSCOL
+				STA scroll
+				LDA _g_cursor_row
+				JMP _vga_setrow
 .endproc
-
-; Sadly it is not possible to do this during vsync,
-; visual glitches will be observed.
-; Consider using HW scrolling in future HW.
 
 .proc			_vga_scroll: near
 
-				; row
-				LDY #1
-				STY VROW
+				; clear invisible (for now) row
+				JSR _vga_vsync
+				LDA #ROWS
+				JSR _vga_setrow
 
-				; col
-				LDX #0
-
-@row_loop0:		STX VCOL
-				LDA VDATA
-				PHA
-				INX
-				CPX #COLS
-				BNE @row_loop0
-
-				DEX
-				DEY
-				STY VROW
-
-@row_loop1:		PLA
-				STA VDATA
-				DEX
-				STX VCOL
-				CPX #255
-				BNE @row_loop1
-
-				INY
-				INY
-				INX
-				STY VROW
-				CPY #ROWS
-				BNE @row_loop0
-
-				; clear last row
+				LDY #COLS
 				LDA #$20
-				DEY
-				STY VROW
-@clr_loop:		STX VCOL
-				STA VDATA
-				INX
-				CPX #COLS
-				BNE @clr_loop
+@loop:			DEY
+				STA VDATA, Y
+				BNE @loop
+
+				INC scroll
+				LDA scroll
+				STA VSCOL
 
 				RTS
 .endproc
@@ -194,11 +167,10 @@ cursor_state:	.res 1, $0
 				CMP _g_cursor_row
 				BEQ _vga_scroll
 
-@addrow:		INC _g_cursor_row
+				INC _g_cursor_row
 				JSR _vga_vsync
 				LDA _g_cursor_row
-				STA VROW
-				RTS
+				JMP _vga_setrow
 
 .endproc
 
@@ -252,17 +224,15 @@ cursor_state:	.res 1, $0
 				STA ptr1
 				STX ptr1 + 1
 
-				JSR _vga_setCol
 				LDX _g_cursor_col
 
 				LDY #0
 				LDX _g_cursor_col
 @loop:			LDA (ptr1), Y
 				BEQ @end
-				STA VDATA
+				STA VDATA, X
 				INY
 				INX
-				STX VCOL
 				BNE @loop ; always non-zero, save one byte over JMP
 @end:			TYA
 				LDX #0
@@ -272,10 +242,9 @@ cursor_state:	.res 1, $0
 
 .proc			_vga_set: near
 
-				TAX
-				JSR _vga_setCol
-				STX VDATA
-				STX cursor_prev
+				LDX _g_cursor_col
+				STA VDATA, X
+				STA cursor_prev
 				RTS
 
 .endproc
@@ -288,8 +257,8 @@ cursor_state:	.res 1, $0
 				LDA cursor_prev
 				RTS
 
-@hwaccess:		JSR _vga_setCol
-				LDA VDATA
+@hwaccess:		LDX _g_cursor_col
+				LDA VDATA, X
 				RTS
 
 .endproc
@@ -300,7 +269,6 @@ cursor_state:	.res 1, $0
 				STX ptr1 + 1
 
 				JSR _vga_resetCursor
-				JSR _vga_setCol
 
 				LDY #0
 @loop:			LDA (ptr1), Y
@@ -320,14 +288,12 @@ cursor_state:	.res 1, $0
 				BEQ @putc
 
 				; Row should be already set
-				STX VCOL
-				STA  VDATA
+				STA VDATA, X
 				INC _g_cursor_col
 				BNE @loop ; Always true
 
 @putc:			STY tmp2
 				JSR _vga_putc
-				JSR _vga_setCol
 				LDY tmp2
 				JMP @loop
 
