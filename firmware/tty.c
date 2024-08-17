@@ -13,7 +13,7 @@
 
 #define AUTOREPEAT_THRESHOLD 50
 
-static uint8_t caps = 0;
+static uint8_t caps = 1;
 static char line[VGA_COLS + 1];
 
 static char tty_key2ascii(uint8_t mod, uint8_t key)
