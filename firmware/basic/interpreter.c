@@ -660,12 +660,6 @@ static void intr_if(void)
 	}
 }
 
-static void intr_dim(void)
-{
-	/* TODO */
-	intr_die(-ENOSYS);
-}
-
 static void intr_gosub(void)
 {
 	struct gosub_elem *new;
@@ -726,7 +720,6 @@ int8_t intr_line(const char *line)
 		intr_next,
 		intr_goto,
 		intr_if,
-		intr_dim,
 		intr_gosub,
 		intr_return,
 		intr_clear
