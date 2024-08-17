@@ -9,10 +9,10 @@
 
 .define			ORB  $A010
 .define			DDRB $A012
-.define			SDA $40
-.define			SCL $80
-.define			nSDA $BF
-.define			nSCL $7F
+.define			SDA $80
+.define			SCL $40
+.define			nSDA $7F
+.define			nSCL $BF
 .define			MEMSZ $8000
 
 ; 24AA256
@@ -75,6 +75,8 @@
 				LDA DDRB
 				ORA #SCL
 				STA DDRB
+@loop:			JSR scl_read
+				BNE @loop
 				RTS
 
 .endproc
@@ -105,22 +107,16 @@
 
 .endproc
 
-.proc			i2c_generateStop: near
-
-				JSR sda_off
-				JSR scl_on
-				JSR sda_on
-				RTS
-
-.endproc
-
 .proc			i2c_sendByte: near
 
-				STA tmp1
 				LDY #7
 
-@loop:			AND #$80
-				BEQ @zero
+				STA tmp1
+
+@loop:			LDA tmp1
+				ROL
+				STA tmp1
+				BCC @zero
 				JSR sda_on
 				JMP @next
 
@@ -128,16 +124,15 @@
 @next:			JSR scl_on
 				JSR scl_off
 
-				LDA tmp1
-				ASL
-				STA tmp1
-
 				DEY
 				BPL @loop
 
 				JSR sda_on
 				JSR scl_on
+				JSR sda_read
+				PHA
 				JSR scl_off
+				PLA
 				RTS
 
 .endproc
@@ -147,23 +142,19 @@
 				PHA ; ack flag
 				JSR sda_on
 
-				LDA #0
-				STA tmp1
 				LDY #7
 @loop:			JSR scl_on
 
-				LDA tmp1
-				ASL
-				STA tmp1
-
 				JSR sda_read
-				BEQ @skip
+				SEC
+				BNE @noclr
+				CLC
 
-				LDA #1
-				ORA tmp1
+@noclr: 		LDA tmp1
+				ROL
 				STA tmp1
 
-@skip:			JSR scl_off
+				JSR scl_off
 				DEY
 				BPL @loop
 
@@ -175,6 +166,8 @@
 @ackskip:		JSR scl_on
 				JSR scl_off
 
+				JSR sda_on
+
 				LDA tmp1
 				RTS
 
@@ -185,12 +178,20 @@
 				; addr in zeropage regs, dev in A
 
 				STA dev
-				JSR i2c_generateStart
+@loop:			JSR i2c_generateStart
 
 				LDA dev
 				JSR i2c_sendByte
 
-				LDA #1
+				CMP #0
+				BEQ @ack
+
+				; got NAK, retry
+				JSR i2c_generateStop
+				LDA dev
+				JMP @loop
+
+@ack:			LDA #1
 				AND dev
 				BNE @end
 
@@ -270,6 +271,15 @@
 
 .endproc
 
+.proc			i2c_generateStop: near
+
+				JSR sda_off
+				JSR scl_on
+				JSR sda_on
+				RTS
+
+.endproc
+
 .proc			_i2c_read: near
 
 				JSR i2c_prologue
@@ -281,25 +291,19 @@
 				JSR i2c_address
 
 @loop:			LDA len + 1
-				BNE @ack
+				BNE @noack
 				LDA len
-				CMP #1
-				BNE @ack
-				LDA #0
-				BEQ @get
+				BEQ i2c_generateStop
+				SEC
+				SBC #1
 
-@ack:			LDA #1
-@get:			PHA
-				JSR i2c_getByte
+@noack:			JSR i2c_getByte
 				LDY #0
 				STA (data), Y
 
 				JSR i2c_nextByte
 
-				PLA
-				BNE @loop
-
-				JMP i2c_generateStop
+				JMP @loop
 
 .endproc
 

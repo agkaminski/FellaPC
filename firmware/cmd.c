@@ -124,40 +124,40 @@ static void cmd_save(void)
 	struct line *curr = line_head;
 	uint16_t address = 0;
 	size_t len;
-	static const char term = '\0';
 
 	while (curr != NULL) {
 		len = cmd_sprintLine(buff, curr);
-		i2c_write(address, buff, len);
 		curr = curr->next;
+		if (curr == NULL) {
+			/* Cause \0 to be written to mark EOF */
+			++len;
+		}
+		i2c_write(address, buff, len);
 		address += len;
 	}
-	i2c_write(address, &term, 1);
 }
 
 static void cmd_load(void)
 {
 	char buff[VGA_COLS + 1];
-	char c;
 	uint16_t address = 0;
-	uint8_t pos = 0;
+	uint8_t pos, start;
 
 	while (1) {
-		i2c_read(address, &c, 1);
-		if ((c == '\0') || (c == 0xff)) {
-			break;
-		}
+		i2c_read(address, buff, sizeof(buff));
 
-		if (c == '\n') {
-			buff[pos] = '\0';
-			cmd_addLine(buff);
-			pos = 0;
-		}
-		else {
-			buff[pos++] = c;
-		}
+		for (start = 0, pos = 0; pos < sizeof(buff); ++pos) {
+			if ((buff[pos] == '\0') || (buff[pos] == 0xff)) {
+				return;
+			}
 
-		++address;
+			if (buff[pos] == '\n') {
+				buff[pos] = '\0';
+				cmd_addLine(buff + start);
+				address += pos + 1 - start;
+				start = pos + 1;
+			}
+		}
 	}
 }
 
