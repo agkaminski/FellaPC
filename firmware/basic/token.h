@@ -25,7 +25,6 @@ enum token_type {
 	token_next,
 	token_goto,
 	token_if,
-	token_dim,
 	token_gosub,
 	token_return,
 	token_clear,

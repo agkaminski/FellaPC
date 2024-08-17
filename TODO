@@ -1,9 +1,0 @@
-TODO:
-- I2C program save/load
-
-Nice to have:
-- UART (send/recv?)
-- VIA GPIO (PORT/PIN pseudovar?)
-
-Perhaps:
-- monitor with BASIC as an app in eeprom
