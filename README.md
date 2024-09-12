@@ -259,16 +259,16 @@ var = 42
 
 ## Limitations
 
-All limitations in the firmware comes from the limited size of the ROM space and
+All limitations in the firmware come from the limited size of the ROM space and
 poor performance of the CC65 C compiler. 16 KB of program memory was thought to be
-just enought for full BASIC interpreter implementation. Alas, CC65 does not optimize
-almost at all for the code size, also 6502 is infamous of not playing nice with the
+just enought to fit a full BASIC interpreter implementation. Alas, CC65 does not optimize
+almost at all for the code size. 6502 is also infamous of not playing nice with the
 C language. There was much struggle at the end of the development with the ROM space
-running out - so features were removed or abandoned and some functions has been written
-in assembled instead (which provides huge savings). Although I did not wanted to
-write the BASIC interpreter itself in assembler, as I hope to reuse it in the future
-project, so portability is of value. Making whole firmware in assembler would also
-made project much longer and more difficult to maintain.
+running out - so some features were removed or abandoned and some functions has been
+rewritten in assembled instead (which provides huge savings). It was deciced against
+writing the BASIC interpreter itself in the assembler, in hope to reuse it in the future
+project, with its portability in mind. Writing the whole firmware in assembler would also
+prolong the project and more it difficult to maintain.
 
 Due to above concerns, following hardware features are not handled by the firmware:
 
@@ -276,10 +276,9 @@ Due to above concerns, following hardware features are not handled by the firmwa
 - 6522 VIA (apart from I2C and VGA ROM selection),
 - interrupts (only NMI/VBLANK is handled).
 
-Although these features can still be used by PEEK and POKE function by the BASIC
-programmer.
+Although these features can still be used by PEEK and POKE keywords of BASIC.
 
-Visual glitches are expected on the VGA output when VRAM is being modified. CPU is
+Visual glitches are expected on the VGA output when the VRAM is being modified. CPU is
 too slow and DRAM refresh takes too long to be able to perfom any operation during
 VBLANK.
 
@@ -289,10 +288,10 @@ FellaPC SBC PCB is a 4-layer design. This choice was made because:
 
 - it provides superior power supply quility and signal integrity,
 - allowed more compact form factor,
-- there was a choke point around VGA circutry that required usage of inner layer
-for signal routing,
-- price of multilayer PCBs has dropped significantly in the recent years,
-- was a good oportunity to learn 4-layer design hands-on.
+- there was a choke point around VGA circutry that required usage of a inner layer
+for signals routing,
+- price of multilayer PCBs had dropped significantly in the recent years,
+- was a good oportunity to learn the 4-layer design hands-on.
 
 Keyboard PCB (provided as a submodule) is a 2-layer desing.
 
@@ -300,13 +299,12 @@ Keyboard PCB (provided as a submodule) is a 2-layer desing.
 
 ## Case
 
-Case provided as STL files and are designed for the FDM 3D priting. Case is too big
-to be printed in one piece on most of 3D printers, so cutting the model and glueing
-after print is needed.
+Case is provided as STL files that are designed for the FDM 3D priting. Case is too big
+to be printed in one piece on most 3D printers, so cutting the model during slicing
+and glueing back together after printing might be needed. Threaded inserts have to be
+embedded in the case.
 
 Hardware needed:
-
-Threaded inserts has to be embedded in the case:
 
 - Threaded inserts 12 pieces M3 4x5 mm,
 - Bolts 8 pieces of M3x6 and 4 pieces of M3x8.
