@@ -14,6 +14,9 @@ Features:
 - edge connector expansion port,
 - powered via USB-C port.
 
+<img src="img/computer.jpg">
+<img src="img/internals.jpg">
+
 ## Memory map
 
 [Memory map](memmap.md)
