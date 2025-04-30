@@ -73,11 +73,13 @@ static void intr_die(int err)
 	list_ufree(&rpn_stack);
 
 	if (!interactive) {
-		char buff[8];
-		vga_puts("\nLine ");
-		itoa(line_curr, buff, 10);
-		vga_puts(buff);
-		vga_puts(": ");
+		if (err) {
+			char buff[8];
+			vga_puts("\nLine ");
+			itoa(line_curr, buff, 10);
+			vga_puts(buff);
+			vga_puts(": ");
+		}
 
 		intr_clean(0);
 	}
@@ -516,6 +518,7 @@ static void intr_input(void)
 	const char *prompt = "?";
 	struct variable *var;
 	char cmd[81];
+	int8_t ret;
 
 	intr_assertNotNull(token_curr);
 
@@ -537,7 +540,11 @@ static void intr_input(void)
 
 	do {
 		vga_vsync();
-	} while (tty_update(cmd) <= 0);
+	} while ((ret = tty_update(cmd)) <= 0);
+
+	if (ret == 2) {
+		intr_die(0);
+	}
 
 	real_ator(cmd, &var->val);
 }

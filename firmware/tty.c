@@ -158,6 +158,9 @@ int8_t tty_update(char *cmd)
 			vga_newLine();
 			return 1;
 		}
+		else if (keyboard_keys.key == KEY_ESC) {
+			return 2;
+		}
 
 		if (tty_handleSpecial(keyboard_keys.mod, keyboard_keys.key)) {
 			return 0;

@@ -51,7 +51,7 @@ int main(void)
 		do {
 			vga_vsync();
 			err = tty_update(cmd);
-		} while (err <= 0);
+		} while (err <= 0 || err == 2);
 
 		err = cmd_parse(cmd);
 	}
