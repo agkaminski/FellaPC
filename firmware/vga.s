@@ -21,16 +21,16 @@
 .importzp		tmp1, tmp2, ptr1
 .importzp		_g_vsync
 
-.define			VDATA $8000
-.define			VROW  $8080
-.define			VSCOL $8100
+.define			VDATA $6000
+.define			VROW  $6480
+.define			VSCOL $6800
 
 .define			COLS 80
 .define			ROWS 60
 .define			CURSOR 219
 
-.define			ORB $A010
-.define			DDRB $A012
+.define			ORB $7000
+.define			DDRB $7002
 
 .define			CR $0D
 .define			LF $0A

@@ -7,8 +7,8 @@
 .importzp		tmp1, tmp2, ptr1, ptr2, ptr3, sp
 .export			_i2c_read, _i2c_write
 
-.define			ORB  $A010
-.define			DDRB $A012
+.define			ORB  $7000
+.define			DDRB $7002
 .define			SDA $80
 .define			SCL $40
 .define			nSDA $7F
