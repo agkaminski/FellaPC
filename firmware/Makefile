@@ -3,7 +3,7 @@ GOAL = firmware
 CPU = 6502
 TARGET = $(addsuffix .bin, ${GOAL})
 GHASH = "$(shell git describe --always --dirty)"
-OBJ = main.o dram.o interrupt.o vga.o keyboard.o keyboard_low.o tty.o cmd.o \
+OBJ = main.o interrupt.o vga.o keyboard.o keyboard_low.o tty.o cmd.o \
 helper.o system.o i2c.o \
 ualloc/ualloc_init.o ualloc/umalloc.o ualloc/ufree.o ualloc/ustat.o \
 basic/token.o basic/interpreter.o basic/list.o basic/real.o basic/real_asm.o

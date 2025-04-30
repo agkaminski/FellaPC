@@ -6,8 +6,6 @@
 ; interrupt.s
 ; ---------------------------------------------------------------------------
 
-.import			_dram_refresh
-
 ; ---------------------------------------------------------------------------
 ; Non-maskable interrupt (NMI) service routine
 
@@ -39,9 +37,6 @@ jiffies:		.res 2
 				LDA $0104, X
 				AND #$10
 				BNE _break
-
-				; Refresh DRAM
-				JSR _dram_refresh
 
 				; Increment jiffies
 				CLC

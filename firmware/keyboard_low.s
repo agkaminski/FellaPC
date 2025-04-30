@@ -27,7 +27,7 @@ row:			.res 16, $00
 
 				; scan the keyboard
 				LDY #15
-@scan:			LDA $9000, Y
+@scan:			LDA $6C00, Y
 				EOR #$FF
 				STA row, Y
 				DEY
