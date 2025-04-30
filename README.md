@@ -5,8 +5,8 @@ All-in-keyboard 6502 based PC with built-in BASIC interpreter.
 Features:
 
 - BASIC interpreter,
-- 6502/65C02/W65C02S CPU @1.5734375 MHz,
-- 16 KB of ROM, 32 KB of RAM (SRAM or DRAM),
+- 6502/65C02/W65C02S CPU @1.8432 MHz,
+- 32 KiB of ROM, 24 KiB of static RAM,
 - 640x480@60Hz VGA adapter with character generator (80x60 black and white text mode only),
 - 6522 VIA for onboard control, I2C memory and user port,
 - 2 UARTs (USB-C and RS-232),
@@ -259,6 +259,8 @@ var = 42
 
 ## Limitations
 
+Applies to rev A, rev B:
+
 All limitations in the firmware come from the limited size of the ROM space and
 poor performance of the CC65 C compiler. 16 KB of program memory was thought to be
 just enought to fit a full BASIC interpreter implementation. Alas, CC65 does not optimize
@@ -284,16 +286,7 @@ VBLANK.
 
 ## PCB
 
-FellaPC SBC PCB is a 4-layer design. This choice was made because:
-
-- it provides superior power supply quility and signal integrity,
-- allowed more compact form factor,
-- there was a choke point around VGA circutry that required usage of a inner layer
-for signals routing,
-- price of multilayer PCBs had dropped significantly in the recent years,
-- was a good oportunity to learn the 4-layer design hands-on.
-
-Keyboard PCB (provided as a submodule) is a 2-layer desing.
+FellaPC rev C SBC PCB and keyboard PCB are a 2-layer design.
 
 <img src="img/top.png">
 
