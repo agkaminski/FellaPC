@@ -299,12 +299,23 @@ Keyboard PCB (provided as a submodule) is a 2-layer desing.
 
 ## Case
 
-Case is provided as STL files that are designed for the FDM 3D priting. Case is too big
-to be printed in one piece on most 3D printers, so cutting the model during slicing
-and glueing back together after printing might be needed. Threaded inserts have to be
-embedded in the case.
+Case is provided as STL files that are designed for the FDM 3D priting. There are
+three parts:
+
+- keyboard,
+- main body,
+- bottom panel.
+
+All parts are too big to be printed in one piece on most 3D printers, so cutting
+the model during slicing and glueing back together after printing might be needed.
+Threaded inserts have to be embedded in the plastic.
 
 Hardware needed:
 
-- Threaded inserts 12 pieces M3 4x5 mm,
-- Bolts 8 pieces of M3x6 and 4 pieces of M3x8.
+- threaded inserts:
+ - M3 4x5 mm 9 pieces,
+ - M3 4x4 mm 4 pieces,
+- bolts:
+ - M3x4 or M3x5 for keyboard and SCB 8 pieces,
+ - M3x25 for main body 5 pieces.
+
