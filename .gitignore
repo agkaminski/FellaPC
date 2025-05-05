@@ -3,3 +3,10 @@
 *.map
 *.bin
 *.asm
+*backups
+fp-info-cache
+*.kicad_prl
+*.FCBak
+*_html
+*-bak
+
