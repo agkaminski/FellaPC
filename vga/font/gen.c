@@ -3075,16 +3075,32 @@ unsigned char font[] = {
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
 
 int main(void)
 {
+	/* Output verilog */
 	for (size_t i = 0; i < sizeof(font); ++i) {
-		printf("11'x%03x: data <= 8'x%02x;\n", i, ~font[i]);
+		printf("11'x%03x: data <= 8'x%02x;\n", (unsigned)i, ~font[i]);
 	}
 
+	/* ROM file open */
 	int fd = open("output.bin", O_WRONLY | O_CREAT, 0666);
+
+	/* Normal font (256 chars, white on black) */
 	for (size_t i = 0; i < sizeof(font); ++i) font[i] = ~font[i];
 	write(fd, font, sizeof(font));
+
+	/* Alt1 font (256 chars, black on white) */
+	for (size_t i = 0; i < sizeof(font); ++i) font[i] = ~font[i];
+	write(fd, font, sizeof(font));
+
+	/* Alt2 font, 128 chars, white on black and black on while (|= 0x80) */
+	memcpy(font + (sizeof(font) / 2), font, sizeof(font) / 2);
+	for (size_t i = 0; i < sizeof(font) / 2; ++i) font[i] = ~font[i];
+	write(fd, font, sizeof(font));
+
+	/* Alt3 font, 128 chars, black on white and while on black (|= 0x80) */
 	for (size_t i = 0; i < sizeof(font); ++i) font[i] = ~font[i];
 	write(fd, font, sizeof(font));
 }
