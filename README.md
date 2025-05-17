@@ -10,7 +10,7 @@ Features:
 - 640x480@60Hz VGA adapter with character generator (80x60 black and white text mode only),
 - 6522 VIA for onboard control, I2C memory and user port,
 - 2 UARTs (USB-C and RS-232),
-- 69% mechanical keyboard,
+- 68 or 63 button mechanical keyboard,
 - edge connector expansion port,
 - powered via USB-C port.
 
