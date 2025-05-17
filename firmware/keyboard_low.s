@@ -29,6 +29,7 @@ row:			.res 16, $00
 				LDY #15
 @scan:			LDA $6C00, Y
 				EOR #$FF
+				AND #$1F
 				STA row, Y
 				DEY
 				BPL @scan
