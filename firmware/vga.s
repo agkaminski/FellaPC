@@ -22,7 +22,7 @@
 .importzp		_g_vsync
 
 .define			VDATA $6000
-.define			VROW  $6480
+.define			VROW  $6400
 .define			VSCOL $6800
 
 .define			COLS 80
