@@ -89,8 +89,6 @@ row:			.res 16, $00
 				TAY
 
 				; check if Fn is active, change map if so
-				LDA j
-				BNE @noFn
 				LDA isFn
 				BEQ @noFn
 
