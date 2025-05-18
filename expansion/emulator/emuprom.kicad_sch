@@ -14332,7 +14332,7 @@
 				)
 			)
 		)
-		(property "Value" "Crystal"
+		(property "Value" "14.7456M"
 			(at 261.62 109.22 0)
 			(effects
 				(font
