@@ -5,12 +5,15 @@
  * PORTB1: /RESET
  * PORTB2: Latch Enable low
  *
- * PORTC2: /WE
- * PORTC3: Claim sygnal (active high)
- * PORTC4: /OE
- * PORTC5: /CS
+ * PORTB4: /OE
+ * PORTB5: /CS
  *
- * PORTD0: RX
+ * PORTC2: /WE
+ * PORTC3: Claim by AVR (active low)
+ * PORTC4: Claim by 6502 (active low)
+ * PORTC5: /IRQ
+ *
+ * PORTD0: RX`
  * PORTD1: TX
  */
 
@@ -31,7 +34,9 @@ static inline void nop(void)
 }
 
 #define SET(port, pin) ((port) |= (1 << (pin)))
+
 #define CLEAR(port, pin) ((port) &= ~(1 << (pin)))
+
 #define TOGGLE_HIGH(port, pin) \
 	do { \
 		nop(); \
@@ -40,6 +45,7 @@ static inline void nop(void)
 		CLEAR(port, pin); \
 		nop(); \
 	} while (0)
+
 #define TOGGLE_LOW(port, pin) \
 	do { \
 		nop(); \
@@ -51,21 +57,41 @@ static inline void nop(void)
 
 static void claim(void)
 {
+	/* Reset target */
 	CLEAR(PORTB, 1);
 	SET(DDRB, 1);
+
+	/* Inactivate control signals */
+	SET(PORTC, 2);
+	SET(PORTB, 4);
+	SET(PORTB, 5);
+
+	/* Claim bus */
 	SET(PORTC, 4);
-	SET(PORTC, 3);
+	CLEAR(PORTC, 3);
+
+	/* Set data bus as output */
 	DDRD |= 0xfc;
 	DDRC |= 0x3;
 }
 
 static void release(void)
 {
+	/* Inactivate control signals */
+	SET(PORTC, 2);
+	SET(PORTB, 4);
+	SET(PORTB, 5);
+
+	/* High-Z data bus */
 	DDRD &= ~0xfc;
 	DDRC &= ~0x3;
-	CLEAR(PORTC, 3);
+
+	/* Release bus */
+	SET(PORTC, 3);
 	CLEAR(PORTC, 4);
-	SET(DDRB, 1);
+
+	/* Release target reset */
+	CLEAR(DDRB, 1);
 	SET(PORTB, 1);
 }
 
@@ -88,23 +114,24 @@ static uint8_t getData(void)
 static void setAddr(uint16_t addr)
 {
 	setData(addr & 0xff);
-	nop();
 	TOGGLE_HIGH(PORTB, 2);
-	nop();
 	setData(addr >> 8);
 	TOGGLE_HIGH(PORTB, 0);
-	nop();
-	setData(0);
 }
 
 static void write(uint16_t addr, uint8_t data)
 {
 	setAddr(addr);
 	setData(data);
-	nop();
+
+	/* Activate /CS */
+	CLEAR(PORTB, 5);
+
+	/* Write */
 	TOGGLE_LOW(PORTC, 2);
-	nop();
-	setData(0);
+
+	/* Inactivate /CS */
+	SET(PORTB, 5);
 }
 
 static uint8_t read(uint16_t addr)
@@ -112,18 +139,24 @@ static uint8_t read(uint16_t addr)
 	uint8_t ret = 0xff;
 
 	setAddr(addr);
+
+	/* Data as input */
 	DDRC &= ~0x3;
 	DDRD &= ~0xfc;
 	PORTC |= 0x3;
 	PORTD |= 0xfc;
-	nop();
-	nop();
-	nop();
-	CLEAR(PORTC, 4);
-	nop();
+
+	/* Activate /CS and /OE */
+	CLEAR(PORTB, 5);
+	CLEAR(PORTB, 4);
+
 	ret = getData();
-	SET(PORTC, 4);
-	nop();
+
+	/* Inactivate /CS and /OE */
+	SET(PORTB, 4);
+	SET(PORTB, 5);
+
+	/* Bus back as output */
 	DDRC |= 0x3;
 	DDRD |= 0xfc;
 
@@ -205,6 +238,7 @@ static void help(void)
 	uart_puts("\tm - calculate md5 sum\n");
 	uart_puts("\ts - clear memory (all 0xff)\n");
 	uart_puts("\tr - reset target (pulse /RST)\n");
+	uart_puts("\tq - send IRQ (pulse /IRQ)\n");
 }
 
 static void md5(void)
@@ -237,7 +271,7 @@ static int parse(char c)
 	static uint8_t data;
 	static uint8_t cnt;
 	static enum { mode_addr, mode_data } mode = mode_data;
-	static bool claimed = false;
+	static bool claimed = true;
 	static int echoOff = 0;
 	uint8_t val;
 	int err;
@@ -300,6 +334,13 @@ static int parse(char c)
 				SET(PORTB, 1);
 				break;
 
+			case 'q':
+				CLEAR(PORTC, 5);
+				SET(DDRC, 5);
+				nop();
+				CLEAR(DDRC, 5);
+				break;
+
 			case 'm':
 				if (claimed)
 					md5();
@@ -341,23 +382,21 @@ static int parse(char c)
 
 int main(void)
 {
-	DDRB = 0x7;
-	DDRC = 0x3c;
-	DDRD = 1 << 1;
+	DDRB = (1 << 5) | (1 << 4) | (1 << 2) | 1;
+	DDRC = (1 << 4) | (1 << 3) | (1 << 2);
+	DDRD = (1 << 1);
 
-	PORTB = 0x2;
-	PORTC = 1 << 2;
+	PORTB = (1 << 5) | (1 << 4) | (1 << 2) | 1;
+	PORTC = (1 << 5) | (1 << 4) | (1 << 3) | (1 << 2);
 	PORTD = 0;
 	
 	claim();
 
-	uart_init(26); /* 19200 */
+	uart_init(8); /* 115200 */
 	sei();
 	
 	fill(0xff);
 	help();
-	
-	release();
 
 	while (1) {
 		int rx;
