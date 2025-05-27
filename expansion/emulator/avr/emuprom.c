@@ -13,7 +13,7 @@
  * PORTC4: Claim by 6502 (active low)
  * PORTC5: /IRQ
  *
- * PORTD0: RX`
+ * PORTD0: RX
  * PORTD1: TX
  */
 
@@ -90,6 +90,10 @@ static void release(void)
 	SET(PORTC, 3);
 	CLEAR(PORTC, 4);
 
+	/* Allow-gate /CS and /OE */
+	CLEAR(PORTB, 4);
+	CLEAR(PORTB, 5);
+
 	/* Release target reset */
 	CLEAR(DDRB, 1);
 	SET(PORTB, 1);
@@ -114,21 +118,28 @@ static uint8_t getData(void)
 static void setAddr(uint16_t addr)
 {
 	setData(addr & 0xff);
+	nop();
 	TOGGLE_HIGH(PORTB, 2);
+	nop();
 	setData(addr >> 8);
+	nop();
 	TOGGLE_HIGH(PORTB, 0);
+	nop();
 }
 
 static void write(uint16_t addr, uint8_t data)
 {
 	setAddr(addr);
 	setData(data);
+	nop();
 
 	/* Activate /CS */
 	CLEAR(PORTB, 5);
+	nop();
 
 	/* Write */
 	TOGGLE_LOW(PORTC, 2);
+	nop();
 
 	/* Inactivate /CS */
 	SET(PORTB, 5);
@@ -146,15 +157,25 @@ static uint8_t read(uint16_t addr)
 	PORTC |= 0x3;
 	PORTD |= 0xfc;
 
+	nop();
+	nop();
+	nop();
+
 	/* Activate /CS and /OE */
 	CLEAR(PORTB, 5);
 	CLEAR(PORTB, 4);
+
+	nop();
+	nop();
+	nop();
 
 	ret = getData();
 
 	/* Inactivate /CS and /OE */
 	SET(PORTB, 4);
 	SET(PORTB, 5);
+
+	nop();
 
 	/* Bus back as output */
 	DDRC |= 0x3;
@@ -392,7 +413,7 @@ int main(void)
 	
 	claim();
 
-	uart_init(8); /* 115200 */
+	uart_init(7); /* 115200 */
 	sei();
 	
 	fill(0xff);
