@@ -2,6 +2,7 @@
 
 #PACE: Start of PACE I/O Pin Assignments
 NET "blank"  LOC = "P3"  ; 
+NET "vblank_n"  LOC = "P19"  ; 
 NET "col<3>"  LOC = "P18"  ; 
 NET "col<4>"  LOC = "P14"  ; 
 NET "col<5>"  LOC = "P13"  ; 
